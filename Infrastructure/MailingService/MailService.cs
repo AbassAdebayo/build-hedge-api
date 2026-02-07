@@ -1,0 +1,124 @@
+﻿using Domain.Configuration;
+using Domain.Contracts.Services;
+using Domain.Messaging;
+using Domain.TemplateEngine;
+using Infrastructure.Exceptions.Messaging;
+using Infrastructure.Exceptions.TemplateEngine;
+using Infrastructure.Messaging.Models;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace Infrastructure.MailingService
+{
+    public class MailService(IMailSender mailSender, IRazorEngine razorEngine,
+        IOptions<EmailConfiguration> options, ILogger<MailService> logger) : IMailService
+    {
+        private readonly IMailSender _mailSender = mailSender ?? throw new ArgumentNullException(nameof(mailSender));
+        private readonly IRazorEngine _razorEngibe = razorEngine ?? throw new ArgumentNullException(nameof(razorEngine));
+        private readonly EmailConfiguration _emailConfiguration = options.Value ?? throw new ArgumentException(nameof(options));
+        private readonly ILogger<MailService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+        public async Task<bool> SendChangePasswordMail(string email, string name, string userPassword)
+        {
+            try
+            {
+                var model = new ChangePassword()
+                {
+                    Name = name,
+                    Email = email,
+                };
+                var mailBody = await _razorEngibe.ParseAsync("ChangePasswordMail", model);
+                return await _mailSender.Send(_emailConfiguration.FromEmail, _emailConfiguration.FromName, email, name, _emailConfiguration.ChangePasswordSubject, mailBody);
+            }
+            catch (RazorEngineException ex)
+            {
+                _logger.LogError(ex.Message);
+                return false;
+            }
+            catch (MailSenderException ex)
+            {
+                _logger.LogError(ex.Message);
+                return false;
+            }
+        }
+
+        public async Task<bool> SendForgotPasswordMail(string email, string name, string passwordResetLink)
+        {
+            try
+            {
+                var model = new ForgotPassword()
+                {
+                    Name = name,
+                    Email = email,
+                    PasswordResetLink = passwordResetLink
+                };
+                var mailBody = await _razorEngibe.ParseAsync("ForgotPasswordMail", model);
+                return await _mailSender.Send(_emailConfiguration.FromEmail, _emailConfiguration.FromName, email, name, _emailConfiguration.ForgotPasswordSubject, mailBody);
+            }
+            catch (RazorEngineException ex)
+            {
+                _logger.LogError(ex.Message);
+                return false;
+            }
+            catch (MailSenderException ex)
+            {
+                _logger.LogError(ex.Message);
+                return false;
+            }
+        }
+
+        public async Task<bool> SendInvitationMail(string email, string name, string token, string role)
+        {
+            try
+            {
+                var model = new SendInvitation()
+                {
+                    Name = name,
+                    Email = email,
+                    Token = token,
+                    Role = role
+                };
+                var mailBody = await _razorEngibe.ParseAsync("SendInvitationMail", model);
+                return await _mailSender.Send(_emailConfiguration.FromEmail, _emailConfiguration.FromName, email, name, _emailConfiguration.InvitationSubject, mailBody);
+            }
+            catch (RazorEngineException ex)
+            {
+                _logger.LogError(ex.Message);
+                return false;
+            }
+            catch (MailSenderException ex)
+            {
+                _logger.LogError(ex.Message);
+                return false;
+            }
+        }
+
+        public async Task<bool> SendVerificationMail(string email, string name, string token)
+        {
+            try
+            {
+                var model = new SendVerification()
+                {
+                    Name = name,
+                    Email = email,
+                    Token = token
+                };
+                var mailBody = await _razorEngibe.ParseAsync("SendVerificationMail", model);
+                return await _mailSender.Send(_emailConfiguration.FromEmail, _emailConfiguration.FromName, email, name, _emailConfiguration.VerificationSubject, mailBody);
+            }
+            catch (RazorEngineException ex)
+            {
+                _logger.LogError(ex.Message);
+                return false;
+            }
+            catch (MailSenderException ex)
+            {
+                _logger.LogError(ex.Message);
+                return false;
+            }
+        }
+    }
+}
