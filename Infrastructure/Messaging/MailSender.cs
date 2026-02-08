@@ -16,7 +16,7 @@ namespace Infrastructure.Messaging
         private readonly ILogger<IMailSender> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         public async Task<bool> Send(string from, string fromName, string to, string toName, string subject, string message, IDictionary<string, Stream> attachments = null)
         {
-            var smtpApiKey = _configuration["SmtpApiKey"];
+            var smtpApiKey = _configuration["BuildHedgeAPIs:SmtpApiKey"];
 
             var apiInstance = new TransactionalEmailsApi();
             var sendSmtpEmail = new SendSmtpEmail
