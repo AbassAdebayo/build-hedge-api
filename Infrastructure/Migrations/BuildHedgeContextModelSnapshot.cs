@@ -22,6 +22,96 @@ namespace Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Domain.Entities.DomainRule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DomainName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsAllowed")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DomainRules");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("6e3e8978-dcb0-42ea-9c78-7f6209d4a871"),
+                            CreatedAtUtc = new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedBy = "hedgesystem",
+                            DomainName = "gmail.com",
+                            IsAllowed = false,
+                            IsDeleted = false,
+                            Note = "public provider - blocked for org setup"
+                        },
+                        new
+                        {
+                            Id = new Guid("9f3d4978-dcb0-42ea-9c48-7f8509d4a871"),
+                            CreatedAtUtc = new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedBy = "hedgesystem",
+                            DomainName = "yahoo.com",
+                            IsAllowed = false,
+                            IsDeleted = false,
+                            Note = "public provider - blocked for org setup"
+                        },
+                        new
+                        {
+                            Id = new Guid("6e3d4962-dcb0-42bc-9c58-7f6209d4a871"),
+                            CreatedAtUtc = new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedBy = "hedgesystem",
+                            DomainName = "hotmail.com",
+                            IsAllowed = false,
+                            IsDeleted = false,
+                            Note = "public provider - blocked for org setup"
+                        },
+                        new
+                        {
+                            Id = new Guid("6e3d4978-dcb0-42ea-9c48-7f6521d4a871"),
+                            CreatedAtUtc = new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedBy = "hedgesystem",
+                            DomainName = "outlook.com",
+                            IsAllowed = false,
+                            IsDeleted = false,
+                            Note = "public provider - blocked for org setup"
+                        },
+                        new
+                        {
+                            Id = new Guid("6e3d4978-dcb0-42ea-9c48-7f6209e5b871"),
+                            CreatedAtUtc = new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedBy = "hedgesystem",
+                            DomainName = "greatmoh007@gmail.com",
+                            IsAllowed = true,
+                            IsDeleted = false,
+                            Note = "developer testing bypass"
+                        });
+                });
+
             modelBuilder.Entity("Domain.Entities.HedgeContract", b =>
                 {
                     b.Property<Guid>("Id")
@@ -32,7 +122,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("CreatedBy")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("ExpiryDate")
@@ -61,7 +150,6 @@ namespace Infrastructure.Migrations
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
-                        .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
@@ -90,7 +178,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("CreatedBy")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsDeleted")
@@ -105,7 +192,6 @@ namespace Infrastructure.Migrations
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
-                        .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
@@ -135,7 +221,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("CreatedBy")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsDeleted")
@@ -149,7 +234,6 @@ namespace Infrastructure.Migrations
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
-                        .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
@@ -174,21 +258,22 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("BusinessName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("CreatedBy")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
-                        .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
@@ -204,6 +289,9 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BusinessName")
+                        .IsUnique();
+
                     b.ToTable("Organizations");
                 });
 
@@ -217,7 +305,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("CreatedBy")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("EstimatedCompletion")
@@ -235,7 +322,6 @@ namespace Infrastructure.Migrations
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
-                        .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
@@ -263,7 +349,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("CreatedBy")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Description")
@@ -279,7 +364,6 @@ namespace Infrastructure.Migrations
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
-                        .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
@@ -295,28 +379,28 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("a45c9e02-1f0b-4e57-b3d8-9b77b4a302be"),
                             CreatedAtUtc = new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = "HedgeSystem",
-                            Description = "Corporate executive with full financial approval authority.",
+                            CreatedBy = "hedgesystem",
+                            Description = "corporate executive with full financial approval authority.",
                             IsDeleted = false,
-                            Name = "Hedge_Admin"
+                            Name = "hedge_admin"
                         },
                         new
                         {
                             Id = new Guid("6e3d4978-dcb0-42ea-9c48-7f6209d4a871"),
                             CreatedAtUtc = new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = "HedgeSystem",
-                            Description = "Project manager/Contractor who can request price locks.",
+                            CreatedBy = "hedgesystem",
+                            Description = "project manager/contractor who can request price locks.",
                             IsDeleted = false,
-                            Name = "Hedge_Editor"
+                            Name = "hedge_editor"
                         },
                         new
                         {
                             Id = new Guid("6e3d4978-dcb0-42ea-9c48-7f6498d4a871"),
                             CreatedAtUtc = new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = "HedgeSystem",
-                            Description = "Stakeholder who can only view risk reports.",
+                            CreatedBy = "hedgesystem",
+                            Description = "stakeholder who can only view risk reports.",
                             IsDeleted = false,
-                            Name = "Hedge_Viewer"
+                            Name = "hedge_viewer"
                         });
                 });
 
@@ -330,12 +414,11 @@ namespace Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("CreatedBy")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
@@ -347,18 +430,12 @@ namespace Infrastructure.Migrations
                     b.Property<string>("HashSalt")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("OrganizationId")
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -368,9 +445,11 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ProfilePictureUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
-                        .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
@@ -379,9 +458,52 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OrganizationId");
+                    b.HasIndex("Email")
+                        .IsUnique();
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("Domain.Entities.UserOrganizationMembership", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("JoinedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RoleInOrganization")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("UserId", "OrganizationId");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.ToTable("UserOrganizationMembership");
                 });
 
             modelBuilder.Entity("Domain.Entities.UserRole", b =>
@@ -394,7 +516,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("CreatedBy")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsDeleted")
@@ -405,7 +526,6 @@ namespace Infrastructure.Migrations
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
-                        .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
@@ -465,15 +585,23 @@ namespace Infrastructure.Migrations
                     b.Navigation("Organization");
                 });
 
-            modelBuilder.Entity("Domain.Entities.User", b =>
+            modelBuilder.Entity("Domain.Entities.UserOrganizationMembership", b =>
                 {
                     b.HasOne("Domain.Entities.Organization", "Organization")
-                        .WithMany("Users")
+                        .WithMany("Memberships")
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Domain.Entities.User", "User")
+                        .WithMany("Memberships")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Organization");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Domain.Entities.UserRole", b =>
@@ -502,9 +630,9 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.Organization", b =>
                 {
-                    b.Navigation("Projects");
+                    b.Navigation("Memberships");
 
-                    b.Navigation("Users");
+                    b.Navigation("Projects");
                 });
 
             modelBuilder.Entity("Domain.Entities.Project", b =>
@@ -519,6 +647,8 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.User", b =>
                 {
+                    b.Navigation("Memberships");
+
                     b.Navigation("UserRoles");
                 });
 #pragma warning restore 612, 618

@@ -11,12 +11,11 @@ namespace Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
     public class OrganizationsController(IOrganizationService organizationService) : ControllerBase
     {
         private readonly IOrganizationService _organizationService = organizationService ?? throw new ArgumentNullException(nameof(organizationService));
 
-        [HttpPost]
+        [HttpPost("create")]
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(BaseResponse))]
         public async Task<IActionResult> CreateOrganization([FromBody] AddOrganizationToExistingAdminRequest request)
         {

@@ -20,7 +20,7 @@ namespace Application.DTOs.Auth
     public record AddOrganizationToExistingAdminRequest(
         string BusinessName,
         string SubscriptionPlan,
-        string? TaxId,
+        string? TaxId
     );
 
 }

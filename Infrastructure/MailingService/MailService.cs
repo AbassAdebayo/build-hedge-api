@@ -1,10 +1,11 @@
 ﻿using Domain.Configuration;
-using Domain.Contracts.Services;
+using Domain.Contracts.MailingServices;
 using Domain.Messaging;
 using Domain.TemplateEngine;
 using Infrastructure.Exceptions.Messaging;
 using Infrastructure.Exceptions.TemplateEngine;
 using Infrastructure.Messaging.Models;
+using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
@@ -17,7 +18,7 @@ namespace Infrastructure.MailingService
         IOptions<EmailConfiguration> options, ILogger<MailService> logger) : IMailService
     {
         private readonly IMailSender _mailSender = mailSender ?? throw new ArgumentNullException(nameof(mailSender));
-        private readonly IRazorEngine _razorEngibe = razorEngine ?? throw new ArgumentNullException(nameof(razorEngine));
+        private readonly IRazorEngine _razorEngine = razorEngine ?? throw new ArgumentNullException(nameof(razorEngine));
         private readonly EmailConfiguration _emailConfiguration = options.Value ?? throw new ArgumentException(nameof(options));
         private readonly ILogger<MailService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -30,7 +31,7 @@ namespace Infrastructure.MailingService
                     Name = name,
                     Email = email,
                 };
-                var mailBody = await _razorEngibe.ParseAsync("ChangePasswordMail", model);
+                var mailBody = await _razorEngine.ParseAsync("ChangePasswordMail", model);
                 return await _mailSender.Send(_emailConfiguration.FromEmail, _emailConfiguration.FromName, email, name, _emailConfiguration.ChangePasswordSubject, mailBody);
             }
             catch (RazorEngineException ex)
@@ -55,7 +56,7 @@ namespace Infrastructure.MailingService
                     Email = email,
                     PasswordResetLink = passwordResetLink
                 };
-                var mailBody = await _razorEngibe.ParseAsync("ForgotPasswordMail", model);
+                var mailBody = await _razorEngine.ParseAsync("ForgotPasswordMail", model);
                 return await _mailSender.Send(_emailConfiguration.FromEmail, _emailConfiguration.FromName, email, name, _emailConfiguration.ForgotPasswordSubject, mailBody);
             }
             catch (RazorEngineException ex)
@@ -81,7 +82,7 @@ namespace Infrastructure.MailingService
                     Token = token,
                     Role = role
                 };
-                var mailBody = await _razorEngibe.ParseAsync("SendInvitationMail", model);
+                var mailBody = await _razorEngine.ParseAsync("SendInvitationMail", model);
                 return await _mailSender.Send(_emailConfiguration.FromEmail, _emailConfiguration.FromName, email, name, _emailConfiguration.InvitationSubject, mailBody);
             }
             catch (RazorEngineException ex)
@@ -106,7 +107,7 @@ namespace Infrastructure.MailingService
                     Email = email,
                     Token = token
                 };
-                var mailBody = await _razorEngibe.ParseAsync("SendVerificationMail", model);
+                var mailBody = await _razorEngine.ParseAsync("SendVerificationMail", model);
                 return await _mailSender.Send(_emailConfiguration.FromEmail, _emailConfiguration.FromName, email, name, _emailConfiguration.VerificationSubject, mailBody);
             }
             catch (RazorEngineException ex)

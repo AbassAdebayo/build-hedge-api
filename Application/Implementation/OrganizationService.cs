@@ -3,7 +3,7 @@ using Application.DTOs.Auth;
 using Application.Interfaces.Identity;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
-using Domain.Contracts.Services;
+using Domain.Contracts.MailingServices;
 using Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -55,7 +55,8 @@ namespace Application.Implementation
                         SubscriptionPlan = request.SubscriptionPlan,
                         TaxId = request.TaxId,
                         IsActive = false,
-                        CreatedAtUtc = DateTime.UtcNow
+                        CreatedAtUtc = DateTime.UtcNow,
+                        CreatedBy = existingUserAdmin.FirstName
                     };
                     var addOrg = await _organizationRepository.Add(newOrganization);
                     if (addOrg is null)
@@ -91,9 +92,9 @@ namespace Application.Implementation
 
         public async Task<AuthResponse> RegisterOrganizationAsync(RegisterOrganizationRequestModel request)
         {
-            var checkEmailValidity = await _identityService.IsEmailAuthorizedForOrganizationSetup(request.AdminEmail);
-            if (!checkEmailValidity)
-                return new AuthResponse("The provided email is not authorized. Please use a valid business email or contact support.", false);
+            //var checkEmailValidity = await _identityService.IsEmailAuthorizedForOrganizationSetup(request.AdminEmail);
+            //if (!checkEmailValidity)
+            //    return new AuthResponse("The provided email is not authorized. Please use a valid business email or contact support.", false);
 
             var existingOrg = await _organizationRepository
                 .Get<Organization>(org => org.BusinessName == request.BusinessName);
@@ -103,7 +104,7 @@ namespace Application.Implementation
 
             var existingAdminUser = await _userManager.FindByEmailAsync(request.AdminEmail);
             if(existingAdminUser is not null)
-                return new AuthResponse("A user with this email already exists. Please use a different email for the organization admin.", false);
+                return new AuthResponse("A user with this email already exists. To add new organization, kindly login to your account.", false);
 
             if(existingOrg is not null && existingAdminUser is not null)
             {
@@ -125,6 +126,7 @@ namespace Application.Implementation
 
             AuthResponse response = await strategy.ExecuteAsync(async () =>
             {
+                var creator = request.AdminFirstName;
                 using var transaction = await _unitOfWork.BeginTransactionAsync();
                 try
                 {
@@ -139,9 +141,13 @@ namespace Application.Implementation
                         PhoneNumber = request.AdminPhoneNumber,
                         ProfilePictureUrl = request.ProfilePictureUrl,
                         PasswordHash = passwordHash,
+                        HashSalt = hashSalt,
                         EmailConfirmed = false,
-                        CreatedAtUtc = DateTime.UtcNow
+                        CreatedAtUtc = DateTime.UtcNow,
+                        CreatedBy = creator
+
                     };
+
                     var identityResult = await _userManager.CreateAsync(adminUser);
                     if (!identityResult.Succeeded)
                     {
@@ -155,7 +161,8 @@ namespace Application.Implementation
                         SubscriptionPlan = request.SubscriptionPlan,
                         TaxId = request.TaxId,
                         IsActive = false,
-                        CreatedAtUtc = DateTime.UtcNow
+                        CreatedAtUtc = DateTime.UtcNow,
+                        CreatedBy = creator
                     };
 
                     var addOrg = await _organizationRepository.Add(organization);
@@ -172,7 +179,8 @@ namespace Application.Implementation
                         UserId = adminUser.Id,
                         OrganizationId = organization.Id,
                         RoleInOrganization = adminRole.Name,
-                        JoinedAtUtc = DateTime.UtcNow
+                        JoinedAtUtc = DateTime.UtcNow,
+                        CreatedBy = creator
                     };
 
                     var addMembership = await _membershipRepository.Add(membership);
@@ -187,7 +195,9 @@ namespace Application.Implementation
                     // Send verification mail
                     try
                     {
-                      await _mailService.SendVerificationMail(adminUser.Email, organization.BusinessName, token);
+                      var emailSent = await _mailService.SendVerificationMail(adminUser.Email, organization.BusinessName, token);
+                        if (!emailSent)
+                            return new AuthResponse("Unable to send verification mail", false);
                        
                     }
                     catch (Exception ex)

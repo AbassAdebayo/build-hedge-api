@@ -6,11 +6,13 @@ namespace Domain.Configuration
 {
     public class EmailConfiguration
     {
-        public string FromEmail { get; set; }
+        public string FromEmail { get; set; } = "greatmoh007@gmail.com";
         public string FromName { get; set; } = "BuildHedge";
         public string ForgotPasswordSubject { get; set; } = "ForgotPassword";
+#pragma warning disable CS8618 
         public string ChangePasswordSubject { get; set; }
         public string ResetPasswordSubject { get; set; }
+#pragma warning restore CS8618
         public string VerificationSubject { get; set; } = "Verification";
         public string InvitationSubject { get; set; } = "Invitation";
     }

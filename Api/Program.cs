@@ -1,5 +1,7 @@
 using Application.DTOs.Auth.Validator;
+using Domain.Configuration;
 using FluentValidation;
+using FluentValidation.AspNetCore;
 using Infrastructure.Extensions;
 using Infrastructure.IOC.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -21,10 +23,16 @@ builder.Services.Configure<DataProtectionTokenProviderOptions>(o =>
 
 builder.Services.AddDatabase(builder.Configuration.GetConnectionString("HedgeConnection")!);
 
+// Add Email Configurations
+builder.Services.Configure<EmailConfiguration>(builder.Configuration.GetSection("EmailConfiguration"));
+
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<ValidationFilter>();
 });
+
+builder.Services.AddControllersWithViews();
+builder.Services.AddRazorPages();
 
 // Disable default DataAnnotations validation to avoid duplicate messages
 builder.Services.Configure<ApiBehaviorOptions>(options =>
@@ -32,6 +40,8 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 
 // Automatically register all validators in the project
 builder.Services.AddValidatorsFromAssemblyContaining<RegisterOrganizationRequestValidator>();
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddFluentValidationClientsideAdapters();
 
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddAuthentication(options =>
@@ -121,6 +131,8 @@ builder.Services.AddSwaggerGen(c =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+
+app.UseSwagger();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();

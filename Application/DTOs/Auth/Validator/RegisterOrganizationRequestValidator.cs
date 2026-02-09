@@ -45,8 +45,8 @@ namespace Application.DTOs.Auth.Validator
                 .Matches(@"[\W_]").WithMessage("Password must contain at least one special character.");
 
             RuleFor(x => x.AdminConfirmPassword)
-                .NotEmpty().WithMessage("Admin confirm password is required.")
-                .Equal(x => x.AdminPassword).WithMessage("Admin confirm password must match the admin password.");
+                .NotEmpty().WithMessage("Confirm password is required.")
+                .Equal(x => x.AdminPassword).WithMessage("Confirm password must match the password.");
         }
     }
 }

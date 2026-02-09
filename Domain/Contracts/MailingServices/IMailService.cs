@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Domain.Contracts.Services
+namespace Domain.Contracts.MailingServices
 {
     public interface IMailService
     {

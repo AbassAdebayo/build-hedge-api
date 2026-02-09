@@ -11,11 +11,11 @@ namespace Domain.Contracts.Entities
         public Guid Id { get; set; } = Guid.NewGuid();
 
         public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
-        public string CreatedBy { get; set; }
+        public string? CreatedBy { get; set; }
         public DateTime? UpdatedAtUtc { get; set; }
         public bool IsDeleted { get; set; } = false;
 
         [Timestamp]
-        public byte[] RowVersion { get; set; } 
+        public byte[]? RowVersion { get; set; } 
     }
 }
