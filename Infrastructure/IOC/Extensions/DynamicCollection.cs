@@ -11,8 +11,8 @@ namespace Infrastructure.IOC.Extensions
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
         {
             services.AddCustomIdentity(config)
-                .AddRepositories();
-            //.AddServices();
+                .AddRepositories()
+            .AddServices();
             return services;
         }
     }

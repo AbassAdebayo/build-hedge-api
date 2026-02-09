@@ -1,81 +1,131 @@
 ﻿@using Microsoft.Extensions.Configuration;
 @inject IConfiguration configuration;
 @model Infrastructure.Messaging.Models.SendInvitation
+
 @{
     Layout = null;
-    //var appBaseUrl = configuration.GetValue<string>("Urls:BaseUrl");
-    var verifyUserUrl = configuration.GetValue<string>("BuildHedgeUrls:VerifyUserUrl");
+
+    var inviteUrl = configuration.GetValue<string>("BuildHedgeUrls:AcceptInviteUrl");
+    var logoUrl = configuration.GetValue<string>("BuildHedgeUrls:Assets:LogoUrl");
+
+    var acceptInviteLink = $"{inviteUrl}/{Model.Token}";
 }
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width">
-    <title>Invitation</title>
-    <style>
-        /* Reset styles */
-        body,
-        body * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        /* Global styles */
-        body {
-            background-color: #f5f5f5;
-            color: #333;
-            font-family: Arial, sans-serif;
-            font-size: 16px;
-            line-height: 1.5;
-            text-align: left;
-        }
-
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        /* Header styles */
-        .header {
-            background-color: #eee;
-            border-bottom: 1px solid #ccc;
-            padding: 10px;
-            text-align: center;
-        }
-
-        /* Content styles */
-        .content {
-            background-color: #fff;
-            border: 1px solid #ccc;
-            padding: 20px;
-        }
-
-        /* Footer styles */
-        .footer {
-            background-color: #eee;
-            border-top: 1px solid #ccc;
-            padding: 10px;
-            text-align: center;
-        }
-    </style>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Invitation to BuildHedge</title>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>BuildHedge Invitation Mail</h1>
-        </div>
-        <div class="content">
-            <p>Hello @Model.Name,</p>
-            <p>This is an Invitation mail (@Model.Email); you have been invited to BuildHedge as @Model.Role. Kindly click this link to accept the invite</p>
-            <a href="@verifyUserUrl/@Model.Token">Link Here</a>
-        </div>
-        <div class="footer">
-            <p>&copy; @DateTime.UtcNow.Year BuildHedge. All rights reserved.</p>
-        </div>
-    </div>
+
+<body style="margin:0; padding:0; background:#f5f7fb; font-family: Arial, Helvetica, sans-serif; color:#111827;">
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f7fb; padding:30px 12px;">
+        <tr>
+            <td align="center">
+
+                <!-- Main container -->
+                <table role="presentation" width="600" cellpadding="0" cellspacing="0"
+                       style="max-width:600px; width:100%; background:#ffffff; border-radius:16px; overflow:hidden; box-shadow:0 10px 25px rgba(0,0,0,0.06);">
+
+                    <!-- Header -->
+                    <tr>
+                        <td style="padding:28px 26px; background:linear-gradient(135deg,#0f172a,#1d4ed8); text-align:center;">
+
+                            <!-- Logo -->
+                            <img src="cid:build_hedge_logo.png"
+                                 alt="BuildHedge"
+                                 style="height:60px; width:auto; border:0; outline:none; text-decoration:none;" />
+
+                            <div style="font-size:20px; font-weight:700; color:#ffffff; margin:0;">
+                                You’ve been invited 🎉
+                            </div>
+
+                            <div style="font-size:14px; color:#dbeafe; margin-top:8px;">
+                                Join BuildHedge and get started
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Body -->
+                    <tr>
+                        <td style="padding:28px 26px;">
+
+                            <p style="margin:0 0 14px 0; font-size:16px;">
+                                Hi <strong>@Model.Name</strong>, 👋
+                            </p>
+
+                            <p style="margin:0 0 14px 0; font-size:15px; color:#374151; line-height:1.6;">
+                                You have been invited to join <strong style="color:#111827;">BuildHedge</strong>
+                                using this email:
+                                <strong style="color:#111827;">@Model.Email</strong>
+                            </p>
+
+                            <p style="margin:0 0 18px 0; font-size:15px; color:#374151; line-height:1.6;">
+                                You’ve been assigned the role:
+                            </p>
+
+                            <!-- Role badge -->
+                            <div style="display:inline-block; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe;
+                                        padding:10px 14px; border-radius:999px; font-weight:700; font-size:14px; margin-bottom:18px;">
+                                @Model.Role
+                            </div>
+
+                            <p style="margin:0 0 22px 0; font-size:15px; color:#374151; line-height:1.6;">
+                                Click the button below to accept your invitation and complete setup.
+                            </p>
+
+                            <!-- Button -->
+                            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+                                <tr>
+                                    <td align="center" style="padding:0;">
+                                        <a href="@acceptInviteLink"
+                                           style="display:inline-block; background:#2563eb; color:#ffffff; text-decoration:none;
+                                                  padding:14px 22px; border-radius:12px; font-weight:700; font-size:15px;">
+                                            Accept Invitation
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Divider -->
+                            <div style="height:1px; background:#e5e7eb; margin:26px 0;"></div>
+
+                            <!-- Copy link -->
+                            <p style="margin:0 0 10px 0; font-size:13px; color:#6b7280; line-height:1.6;">
+                                If the button doesn’t work, copy and paste this link into your browser:
+                            </p>
+
+                            <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:12px; padding:12px; font-size:13px; color:#111827; word-break:break-all;">
+                                @acceptInviteLink
+                            </div>
+
+                            <!-- Security note -->
+                            <p style="margin:18px 0 0 0; font-size:13px; color:#6b7280; line-height:1.6;">
+                                If you were not expecting this invitation, you can safely ignore this email.
+                            </p>
+
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding:18px 26px; background:#f9fafb; text-align:center;">
+                            <p style="margin:0; font-size:12px; color:#6b7280;">
+                                © @DateTime.UtcNow.Year BuildHedge. All rights reserved.
+                            </p>
+                            <p style="margin:6px 0 0 0; font-size:12px; color:#9ca3af;">
+                                BuildHedge • Secure Fintech Infrastructure
+                            </p>
+                        </td>
+                    </tr>
+
+                </table>
+
+            </td>
+        </tr>
+    </table>
+
 </body>
 </html>
-

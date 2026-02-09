@@ -17,19 +17,21 @@ namespace Infrastructure.Context
             SeedDomainRules(modelBuilder);
 
             // 1. Define the Composite Key (User + Org must be unique)
-            modelBuilder.Entity<UserOrganizationMembership>()
-                .HasKey(m => new { m.UserId, m.OrganizationId });
+            modelBuilder.Entity<UserOrganizationMembership>(entity =>
+            {
+                // Composite Key
+                entity.HasKey(m => new { m.UserId, m.OrganizationId });
 
-            // 2. Setup Relationships
-            modelBuilder.Entity<UserOrganizationMembership>()
-                .HasOne(m => m.User)
-                .WithMany(u => u.Memberships)
-                .HasForeignKey(m => m.UserId);
+                // Link to User
+                entity.HasOne(m => m.User)
+                    .WithMany(u => u.Memberships)
+                    .HasForeignKey(m => m.UserId);
 
-            modelBuilder.Entity<UserOrganizationMembership>()
-                .HasOne(m => m.Organization)
-                .WithMany(o => o.Memberships)
-                .HasForeignKey(m => m.OrganizationId);
+                // Link to Organization
+                entity.HasOne(m => m.Organization)
+                    .WithMany(o => o.Memberships)
+                    .HasForeignKey(m => m.OrganizationId);
+            });
 
             modelBuilder.Entity<HedgeContract>(entity =>
             {
@@ -50,11 +52,6 @@ namespace Infrastructure.Context
                 .HasForeignKey(p => p.OrganizationId);
 
             });
-            // User -> Organization relationship
-            modelBuilder.Entity<User>()
-                .HasOne(u => u.Organization)
-                .WithMany(o => o.Users)
-                .HasForeignKey(u => u.OrganizationId);
 
             // Map Material Metadata to JSONB for AI flexibility
             modelBuilder.Entity<Material>()
@@ -120,12 +117,14 @@ namespace Infrastructure.Context
 
         private  void SeedDomainRules(ModelBuilder modelBuilder)
         {
+            var creator = "HedgeSystem";
+            var timeCreated = DateTime.SpecifyKind(new DateTime(2026, 02, 09), DateTimeKind.Utc);
             modelBuilder.Entity<DomainRule>().HasData(
-                new DomainRule { Id = new Guid("6e3e8978-dcb0-42ea-9c78-7f6209d4a871"), DomainName = "gmail.com", IsAllowed = false, Note = "Public Provider - Blocked for Org Setup" },
-                new DomainRule { Id = new Guid("9f3d4978-dcb0-42ea-9c48-7f8509d4a871"), DomainName = "yahoo.com", IsAllowed = false, Note = "Public Provider - Blocked for Org Setup" },
-                new DomainRule { Id = new Guid("6e3d4962-dcb0-42bc-9c58-7f6209d4a871"), DomainName = "hotmail.com", IsAllowed = false, Note = "Public Provider - Blocked for Org Setup" },
-                new DomainRule {Id = new Guid("6e3d4978-dcb0-42ea-9c48-7f6521d4a871"), DomainName = "outlook.com", IsAllowed = false, Note = "Public Provider - Blocked for Org Setup" },
-                new DomainRule { Id = new Guid("6e3d4978-dcb0-42ea-9c48-7f6209e5b871"), DomainName = "greatmoh007@gmail.com", IsAllowed = true, Note = "Developer testing bypass" }
+                new DomainRule { Id = new Guid("6e3e8978-dcb0-42ea-9c78-7f6209d4a871"), DomainName = "gmail.com", IsAllowed = false, Note = "Public Provider - Blocked for Org Setup", CreatedBy = creator, CreatedAtUtc = timeCreated },
+                new DomainRule { Id = new Guid("9f3d4978-dcb0-42ea-9c48-7f8509d4a871"), DomainName = "yahoo.com", IsAllowed = false, Note = "Public Provider - Blocked for Org Setup", CreatedBy = creator, CreatedAtUtc = timeCreated },
+                new DomainRule { Id = new Guid("6e3d4962-dcb0-42bc-9c58-7f6209d4a871"), DomainName = "hotmail.com", IsAllowed = false, Note = "Public Provider - Blocked for Org Setup", CreatedBy = creator, CreatedAtUtc = timeCreated },
+                new DomainRule {Id = new Guid("6e3d4978-dcb0-42ea-9c48-7f6521d4a871"), DomainName = "outlook.com", IsAllowed = false, Note = "Public Provider - Blocked for Org Setup", CreatedBy = creator, CreatedAtUtc = timeCreated },
+                new DomainRule { Id = new Guid("6e3d4978-dcb0-42ea-9c48-7f6209e5b871"), DomainName = "greatmoh007@gmail.com", IsAllowed = true, Note = "Developer testing bypass", CreatedBy = creator, CreatedAtUtc = timeCreated }
 
             );
             

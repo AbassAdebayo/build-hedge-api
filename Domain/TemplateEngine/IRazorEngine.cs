@@ -9,4 +9,4 @@ namespace Domain.TemplateEngine
         Task<string> ParseAsync<TModel>(string viewName, TModel model);
     }
 }
-}
+

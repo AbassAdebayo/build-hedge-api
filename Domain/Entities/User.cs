@@ -17,8 +17,6 @@ namespace Domain.Entities
         public string? ProfilePictureUrl { get; set; }
 #pragma warning restore CS8618
         public bool EmailConfirmed { get; set; } = false;
-        public Guid OrganizationId { get; set; }
-        public Organization Organization { get; set; } = null!;
 
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
         public ICollection<UserOrganizationMembership> Memberships { get; set; } = new List<UserOrganizationMembership>();

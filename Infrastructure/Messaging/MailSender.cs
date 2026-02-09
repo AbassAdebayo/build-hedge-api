@@ -2,6 +2,8 @@
 using brevo_csharp.Model;
 using Domain.Messaging;
 using Infrastructure.Exceptions.Messaging;
+using Infrastructure.Extensions.Email;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
@@ -10,10 +12,12 @@ using System.Text;
 
 namespace Infrastructure.Messaging
 {
-    public class MailSender(IConfiguration configuration, ILogger<MailSender> logger) : IMailSender
+    public class MailSender(IConfiguration configuration, IWebHostEnvironment _env, 
+        ILogger<MailSender> logger) : IMailSender
     {
         private readonly IConfiguration _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         private readonly ILogger<IMailSender> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        private readonly IWebHostEnvironment _env = _env ?? throw new ArgumentNullException(nameof(_env));
         public async Task<bool> Send(string from, string fromName, string to, string toName, string subject, string message, IDictionary<string, Stream> attachments = null)
         {
             var smtpApiKey = _configuration["BuildHedgeAPIs:SmtpApiKey"];
@@ -24,8 +28,32 @@ namespace Infrastructure.Messaging
                 HtmlContent = message,
                 Subject = subject,
                 Sender = new SendSmtpEmailSender(fromName, from),
-                To = new List<SendSmtpEmailTo>() { new SendSmtpEmailTo(to, toName) }
+                To = new List<SendSmtpEmailTo>() { new SendSmtpEmailTo(to, toName) },
+                Attachment = new List<SendSmtpEmailAttachment>()
+
             };
+
+            foreach (var asset in EmailAssetRegistry.AssetMap)
+            {
+                if (message.Contains($"cid:{asset.Key}"))
+                {
+                    string absolutePath = Path.Combine(_env.WebRootPath, asset.Value);
+
+                    if (File.Exists(absolutePath))
+                    {
+                        byte[] imageBytes = File.ReadAllBytes(absolutePath);
+                        sendSmtpEmail.Attachment.Add(new SendSmtpEmailAttachment(
+                            content: imageBytes,
+                            name: asset.Key
+                        ));
+                    }
+                    else
+                    {
+                        _logger.LogWarning($"Email asset not found at: {absolutePath}");
+                    }
+                }
+            }
+
 
             if (attachments != null)
             {
