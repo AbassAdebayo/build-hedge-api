@@ -17,7 +17,7 @@ namespace Application.Implementation
     public class UserService(IUserRepository userRepository, ILogger<UserService> logger,
         UserManager<User> userManager, IIdentityService identityService,
         IUserOrganizationMembershipRepository membershipRepository, IRoleRepository roleRepository,
-        IMailService mailService, IUnitOfWork unitOfWork) : IUserService
+        IMailService mailService, IOrganizationRepository organizationRepository, IUnitOfWork unitOfWork) : IUserService
     {
         private readonly IUserRepository _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         private readonly ILogger<UserService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -27,6 +27,7 @@ namespace Application.Implementation
         private readonly IUnitOfWork _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         private readonly IUserOrganizationMembershipRepository _membershipRepository = membershipRepository ?? throw new ArgumentNullException(nameof(membershipRepository));
         private readonly IMailService _mailService = mailService ?? throw new ArgumentNullException(nameof(mailService));
+        private readonly IOrganizationRepository _organizationRepository = organizationRepository ?? throw new ArgumentNullException(nameof(organizationRepository));
         public async Task<AuthResponse> InviteUserToOrganizationAsync(Guid adminUserId, Guid organizationId, AddUserToOrganizationRequestModel request)
         {
             var isAdminMember = await _membershipRepository.Any<UserOrganizationMembership>(m => m.OrganizationId == request.OrganizationId && m.UserId == adminUserId);
@@ -126,5 +127,55 @@ namespace Application.Implementation
 
         }
 
+        public async Task<AuthResponse> VerifyUserAsync(string token)
+        {
+            var claims = _identityService.ValidateToken(token);
+            if (claims is null) return new AuthResponse("Unable to validate with the provided token", false);
+            var email = claims.SingleOrDefault(c => c.Type == "email");
+            if (email == null) return new AuthResponse("User Claims not valid", false);
+            var user = await _userRepository.Get<User>(u => u.Email == email.Value);
+            if (user == null) return new AuthResponse("Unable to find user", false);
+            if (user.EmailConfirmed) return new AuthResponse("User already Validated", false);
+
+            var strategy = _unitOfWork.CreateExecutionStrategy();
+
+            AuthResponse response = await strategy.ExecuteAsync(async () =>
+            {
+                using var transaction = await _unitOfWork.BeginTransactionAsync();
+                try
+                {
+                    user.EmailConfirmed = true;
+                    await _userRepository.Update(user);
+                    await _unitOfWork.SaveChangesAsync();
+
+                    var membership = await _membershipRepository.Get<UserOrganizationMembership>(m => m.UserId == user.Id);
+
+                    if (membership.RoleInOrganization == "Hedge_Admin")
+                    {
+                        var organization = await _organizationRepository.Get<Organization>(o => o.Id == membership.OrganizationId);
+                        organization.IsActive = true;
+                        await _organizationRepository.Update(organization);
+                        await _unitOfWork.SaveChangesAsync();
+
+                        await transaction.CommitAsync();
+                        return new AuthResponse("Admin validated successfully! Kindly login to setup your organization", true);
+                    }
+                    else
+                    {
+                        return new AuthResponse("User validated successfully! Kindly login to access your organization", true);
+                    }
+                }
+                catch(Exception ex)
+                {
+                    _logger.LogError(ex, "Error validating user");
+                    await transaction.RollbackAsync();
+                    return new AuthResponse("An error occurred while validating user.", false);
+                }
+
+            });
+
+            return response;
+
+        }
     }
 }
