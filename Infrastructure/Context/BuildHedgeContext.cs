@@ -134,6 +134,7 @@ namespace Infrastructure.Context
         DbSet<Material> Materials => Set<Material>();
         DbSet<MaterialPriceHistory> MaterialPriceHistories => Set<MaterialPriceHistory>();
         DbSet<Organization> Organizations => Set<Organization>();
+        DbSet<UserOrganizationMembership> Memberships => Set<UserOrganizationMembership>();
         DbSet<Project> Projects => Set<Project>();
         DbSet<Role> Roles => Set<Role>();
         DbSet<User> Users => Set<User>();

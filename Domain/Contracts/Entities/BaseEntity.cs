@@ -9,7 +9,6 @@ namespace Domain.Contracts.Entities
     {
         [Key]
         public Guid Id { get; set; } = Guid.NewGuid();
-
         public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
         public string? CreatedBy { get; set; }
         public DateTime? UpdatedAtUtc { get; set; }
