@@ -26,10 +26,6 @@ namespace Application.DTOs.Auth.Validator
                 .Matches(@"^\+?[1-9]\d{1,14}$").WithMessage("Admin phone number must be a valid international phone number.");
 
 
-            RuleFor(x => x.OrganizationId)
-                .NotEmpty().WithMessage("Organization ID is required.")
-                .Must(id => id != Guid.Empty).WithMessage("Organization ID must be a valid GUID.");
-
             RuleFor(x => x.RoleId)
                 .NotEmpty().WithMessage("Role ID is required.")
                 .Must(id => id != Guid.Empty).WithMessage("Role ID must be a valid GUID.");
