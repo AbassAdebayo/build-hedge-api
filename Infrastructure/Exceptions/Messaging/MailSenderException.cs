@@ -6,7 +6,9 @@ namespace Infrastructure.Exceptions.Messaging
 {
     public class MailSenderException : Exception
     {
+#pragma warning disable CS0114
         public string Message { get; set; }
+#pragma warning restore CS0114 
 
         public MailSenderException(string message)
             : base(message) { }

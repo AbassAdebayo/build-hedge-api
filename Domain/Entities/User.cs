@@ -16,7 +16,7 @@ namespace Domain.Entities
         public string? HashSalt { get; set; }
         public string? ProfilePictureUrl { get; set; }
 #pragma warning restore CS8618
-        public bool EmailConfirmed { get; set; } = false;
+        public bool IsVerified { get; set; } = false;
 
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
         public ICollection<UserOrganizationMembership> Memberships { get; set; } = new List<UserOrganizationMembership>();

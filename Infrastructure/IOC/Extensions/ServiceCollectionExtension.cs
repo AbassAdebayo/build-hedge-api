@@ -31,6 +31,8 @@ namespace Infrastructure.IOC.Extensions
             return services
                 
                 .AddScoped<IOrganizationService, OrganizationService>()
+                .AddScoped<IUserService, UserService>()
+                .AddScoped<IUserOrganizationMembershipService, UserOrganizationMembershipService>()
                 .AddScoped<IMailSender, MailSender>()
                 .AddScoped<IMailService, MailService>()
                 .AddScoped<IRazorEngine, RazorEngine>();

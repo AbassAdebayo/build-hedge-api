@@ -59,7 +59,7 @@ namespace Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     BusinessName = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     TaxId = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    SubscriptionPlan = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SubscriptionPlan = table.Column<int>(type: "int", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -102,7 +102,7 @@ namespace Infrastructure.Migrations
                     PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     HashSalt = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ProfilePictureUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    EmailConfirmed = table.Column<bool>(type: "bit", nullable: false),
+                    IsVerified = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UpdatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -166,7 +166,7 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "UserOrganizationMembership",
+                name: "Memberships",
                 columns: table => new
                 {
                     UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -182,15 +182,15 @@ namespace Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_UserOrganizationMembership", x => new { x.UserId, x.OrganizationId });
+                    table.PrimaryKey("PK_Memberships", x => new { x.UserId, x.OrganizationId });
                     table.ForeignKey(
-                        name: "FK_UserOrganizationMembership_Organizations_OrganizationId",
+                        name: "FK_Memberships_Organizations_OrganizationId",
                         column: x => x.OrganizationId,
                         principalTable: "Organizations",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_UserOrganizationMembership_Users_UserId",
+                        name: "FK_Memberships_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
@@ -300,6 +300,11 @@ namespace Infrastructure.Migrations
                 column: "MaterialId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Memberships_OrganizationId",
+                table: "Memberships",
+                column: "OrganizationId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Organizations_BusinessName",
                 table: "Organizations",
                 column: "BusinessName",
@@ -308,11 +313,6 @@ namespace Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Projects_OrganizationId",
                 table: "Projects",
-                column: "OrganizationId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_UserOrganizationMembership_OrganizationId",
-                table: "UserOrganizationMembership",
                 column: "OrganizationId");
 
             migrationBuilder.CreateIndex(
@@ -345,7 +345,7 @@ namespace Infrastructure.Migrations
                 name: "MaterialPriceHistories");
 
             migrationBuilder.DropTable(
-                name: "UserOrganizationMembership");
+                name: "Memberships");
 
             migrationBuilder.DropTable(
                 name: "UserRoles");
