@@ -7,6 +7,6 @@ namespace Application.Interfaces.Services
 {
     public interface IUserService
     {
-        public Task<AuthResponse> InviteUserToOrganizationAsync(Guid adminUserId, AddUserToOrganizationRequestModel request);
+        public Task<AuthResponse> InviteUserToOrganizationAsync(Guid adminUserId, Guid organizationId, AddUserToOrganizationRequestModel request);
     }
 }

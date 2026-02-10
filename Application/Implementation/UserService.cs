@@ -27,7 +27,7 @@ namespace Application.Implementation
         private readonly IUnitOfWork _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         private readonly IUserOrganizationMembershipRepository _membershipRepository = membershipRepository ?? throw new ArgumentNullException(nameof(membershipRepository));
         private readonly IMailService _mailService = mailService ?? throw new ArgumentNullException(nameof(mailService));
-        public async Task<AuthResponse> InviteUserToOrganizationAsync(Guid adminUserId, AddUserToOrganizationRequestModel request)
+        public async Task<AuthResponse> InviteUserToOrganizationAsync(Guid adminUserId, Guid organizationId, AddUserToOrganizationRequestModel request)
         {
             var isAdminMember = await _membershipRepository.Any<UserOrganizationMembership>(m => m.OrganizationId == request.OrganizationId && m.UserId == adminUserId);
 
@@ -38,7 +38,7 @@ namespace Application.Implementation
 
             if(existingUser is not null)
             {
-                var alreadyMember = await _membershipRepository.Any<UserOrganizationMembership>(m => m.OrganizationId == request.OrganizationId && m.UserId == existingUser.Id);
+                var alreadyMember = await _membershipRepository.Any<UserOrganizationMembership>(m => m.OrganizationId == organizationId && m.UserId == existingUser.Id);
                 if (alreadyMember)
                     return new AuthResponse("This user is already a member of this organization.", false);
             }
@@ -84,7 +84,7 @@ namespace Application.Implementation
                     var membership = new UserOrganizationMembership
                     {
                         UserId = user.Id,
-                        OrganizationId = request.OrganizationId,
+                        OrganizationId = organizationId,
                         RoleInOrganization = role.Name,
                         JoinedAtUtc = DateTime.UtcNow
                     };
