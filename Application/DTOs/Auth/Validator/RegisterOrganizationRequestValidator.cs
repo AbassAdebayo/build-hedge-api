@@ -15,28 +15,32 @@ namespace Application.DTOs.Auth.Validator
                 .MaximumLength(100).WithMessage("Business name must not exceed 100 characters.");
 
             RuleFor(x => x.SubscriptionPlan)
+                .IsEnumName(typeof(Domain.Contracts.Enum.SubscriptionPlan), caseSensitive: false)
                 .NotEmpty().WithMessage("Subscription plan is required.")
-                .Must(plan => plan == "Basic" || plan == "Pro" || plan == "Enterprise")
+               .Must(x => x.Equals("Basic", StringComparison.OrdinalIgnoreCase) ||
+                          x.Equals("Standard", StringComparison.OrdinalIgnoreCase) ||
+                          x.Equals("Enterprise", StringComparison.OrdinalIgnoreCase))
                 .WithMessage("Subscription plan must be either 'Basic', 'Pro', or 'Enterprise'.");
 
             RuleFor(x => x.AdminEmail)
-                .NotEmpty().WithMessage("Admin email is required.")
-                .EmailAddress().WithMessage("Admin email must be a valid email address.");
+                .NotEmpty().WithMessage("Email is required.")
+                .EmailAddress().WithMessage("Email must be a valid email address.")
+                .Equal(x => x.AdminEmail.Trim()).WithMessage("Email cannot contain leading or trailing whitespace.");
 
             RuleFor(x => x.AdminFirstName)
-                .NotEmpty().WithMessage("Admin first name is required.")
-                .MaximumLength(50).WithMessage("Admin first name must not exceed 50 characters.");
+                .NotEmpty().WithMessage("First name is required.")
+                .MaximumLength(50).WithMessage("First name must not exceed 50 characters.");
 
             RuleFor(x => x.AdminLastName)
-                .NotEmpty().WithMessage("Admin last name is required.")
-                .MaximumLength(50).WithMessage("Admin last name must not exceed 50 characters.");
+                .NotEmpty().WithMessage("Last name is required.")
+                .MaximumLength(50).WithMessage("Last name must not exceed 50 characters.");
 
             RuleFor(x => x.AdminPhoneNumber)
-                .NotEmpty().WithMessage("Admin phone number is required.")
-                .Matches(@"^\+?[1-9]\d{1,14}$").WithMessage("Admin phone number must be a valid international phone number.");
+                .NotEmpty().WithMessage("Phone number is required.")
+                .Matches(@"^\+?[1-9]\d{1,14}$").WithMessage("Phone number must be a valid international phone number.");
 
             RuleFor(x => x.AdminPassword)
-                .NotEmpty().WithMessage("Admin password is required.")
+                .NotEmpty().WithMessage("Password is required.")
                 .MinimumLength(8).WithMessage("Password must be at least 8 characters long.")
                 .MaximumLength(50).WithMessage("Password must not exceed 50 characters.")
                 .Matches(@"[A-Z]").WithMessage("Password must contain at least one uppercase letter.")

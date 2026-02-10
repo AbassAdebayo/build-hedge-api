@@ -135,7 +135,7 @@ namespace Application.Implementation
             if (email == null) return new AuthResponse("User Claims not valid", false);
             var user = await _userRepository.Get<User>(u => u.Email == email.Value);
             if (user == null) return new AuthResponse("Unable to find user", false);
-            if (user.EmailConfirmed) return new AuthResponse("User already Validated", false);
+            if (user.IsVerified) return new AuthResponse("User already Validated", false);
 
             var strategy = _unitOfWork.CreateExecutionStrategy();
 
@@ -144,7 +144,7 @@ namespace Application.Implementation
                 using var transaction = await _unitOfWork.BeginTransactionAsync();
                 try
                 {
-                    user.EmailConfirmed = true;
+                    user.IsVerified = true;
                     await _userRepository.Update(user);
                     await _unitOfWork.SaveChangesAsync();
 

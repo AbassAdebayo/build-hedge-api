@@ -3,6 +3,7 @@ using Application.DTOs.Auth;
 using Application.Interfaces.Identity;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
+using Domain.Contracts.Enum;
 using Domain.Contracts.MailingServices;
 using Domain.Entities;
 using Microsoft.AspNetCore.Identity;
@@ -17,7 +18,7 @@ namespace Application.Implementation
 {
     public class OrganizationService(IUserRepository userRepository, ILogger<OrganizationService> logger,
         UserManager<User> userManager, IIdentityService identityService, IOrganizationRepository organizationRepository,
-        IUserOrganizationMembershipRepository membershipRepository, IRoleRepository roleRepository, 
+        IUserOrganizationMembershipRepository membershipRepository, IRoleRepository roleRepository,
         IMailService mailService, IUnitOfWork unitOfWork) : IOrganizationService
     {
         private readonly IUserRepository _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
@@ -52,7 +53,7 @@ namespace Application.Implementation
                     var newOrganization = new Organization
                     {
                         BusinessName = request.BusinessName,
-                        SubscriptionPlan = request.SubscriptionPlan,
+                        SubscriptionPlan = ParseSubscriptionPlan(request.SubscriptionPlan),
                         TaxId = request.TaxId,
                         IsActive = false,
                         CreatedAtUtc = DateTime.UtcNow,
@@ -85,10 +86,10 @@ namespace Application.Implementation
                     await transaction.RollbackAsync();
                     return new AuthResponse("An error occurred while registering the organization.", false);
                 }
-                
+
             });
             return response;
-        }            
+        }
 
         public async Task<AuthResponse> RegisterOrganizationAsync(RegisterOrganizationRequestModel request)
         {
@@ -99,14 +100,14 @@ namespace Application.Implementation
             var existingOrg = await _organizationRepository
                 .Get<Organization>(org => org.BusinessName == request.BusinessName);
 
-            if(existingOrg is not null)
-                return new AuthResponse("This organization is already registered on BuildHedge.", false);   
+            if (existingOrg is not null)
+                return new AuthResponse("This organization is already registered on BuildHedge.", false);
 
             var existingAdminUser = await _userManager.FindByEmailAsync(request.AdminEmail);
-            if(existingAdminUser is not null)
+            if (existingAdminUser is not null)
                 return new AuthResponse("A user with this email already exists. To add new organization, kindly login to your account.", false);
 
-            if(existingOrg is not null && existingAdminUser is not null)
+            if (existingOrg is not null && existingAdminUser is not null)
             {
                 var alreadyMember = await _membershipRepository
                 .Any<UserOrganizationMembership>(uorg => uorg.OrganizationId == existingOrg.Id && uorg.UserId == existingOrg.Id);
@@ -119,7 +120,7 @@ namespace Application.Implementation
                 {
                     return new AuthResponse("This organization is already registered. If you believe this is an error, contact support.", false);
                 }
-                    
+
             }
 
             var strategy = _unitOfWork.CreateExecutionStrategy();
@@ -142,7 +143,7 @@ namespace Application.Implementation
                         ProfilePictureUrl = request.ProfilePictureUrl,
                         PasswordHash = passwordHash,
                         HashSalt = hashSalt,
-                        EmailConfirmed = false,
+                        IsVerified = false,
                         CreatedAtUtc = DateTime.UtcNow,
                         CreatedBy = creator
 
@@ -158,7 +159,7 @@ namespace Application.Implementation
                     var organization = new Organization
                     {
                         BusinessName = request.BusinessName,
-                        SubscriptionPlan = request.SubscriptionPlan,
+                        SubscriptionPlan = ParseSubscriptionPlan(request.SubscriptionPlan),
                         TaxId = request.TaxId,
                         IsActive = false,
                         CreatedAtUtc = DateTime.UtcNow,
@@ -195,10 +196,10 @@ namespace Application.Implementation
                     // Send verification mail
                     try
                     {
-                      var emailSent = await _mailService.SendVerificationMail(adminUser.Email, organization.BusinessName, token);
+                        var emailSent = await _mailService.SendVerificationMail(adminUser.Email, organization.BusinessName, token);
                         if (!emailSent)
                             return new AuthResponse("Unable to send verification mail", false);
-                       
+
                     }
                     catch (Exception ex)
                     {
@@ -221,6 +222,13 @@ namespace Application.Implementation
 
             return response;
 
+        }
+
+        private static SubscriptionPlan ParseSubscriptionPlan(string subscriptionPlan)
+        {
+            return Enum.TryParse<SubscriptionPlan>(subscriptionPlan, true, out var parsedPlan)
+                ? parsedPlan
+                : throw new ArgumentException("Invalid subscription plan. Please provide a valid plan.", nameof(subscriptionPlan));
         }
     }
 }

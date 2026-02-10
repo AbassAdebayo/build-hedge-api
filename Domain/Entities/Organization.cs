@@ -1,4 +1,5 @@
 ﻿using Domain.Contracts.Entities;
+using Domain.Contracts.Enum;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -9,7 +10,7 @@ namespace Domain.Entities
     {
         public required string BusinessName { get; set; }
         public string? TaxId { get; set; }
-        public string SubscriptionPlan { get; set; } = "Enterprise";
+        public SubscriptionPlan SubscriptionPlan { get; set; }
 
         public bool IsActive { get; set; }
         public ICollection<Project> Projects { get; set; } = new List<Project>();

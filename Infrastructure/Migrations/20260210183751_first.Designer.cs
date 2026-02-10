@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(BuildHedgeContext))]
-    [Migration("20260209185736_first")]
+    [Migration("20260210183751_first")]
     partial class first
     {
         /// <inheritdoc />
@@ -280,9 +280,8 @@ namespace Infrastructure.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
-                    b.Property<string>("SubscriptionPlan")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("SubscriptionPlan")
+                        .HasColumnType("int");
 
                     b.Property<string>("TaxId")
                         .HasColumnType("nvarchar(max)");
@@ -423,9 +422,6 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("bit");
-
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -434,6 +430,9 @@ namespace Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsVerified")
                         .HasColumnType("bit");
 
                     b.Property<string>("LastName")
@@ -506,7 +505,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("OrganizationId");
 
-                    b.ToTable("UserOrganizationMembership");
+                    b.ToTable("Memberships");
                 });
 
             modelBuilder.Entity("Domain.Entities.UserRole", b =>

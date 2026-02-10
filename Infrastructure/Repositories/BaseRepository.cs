@@ -43,6 +43,14 @@ namespace Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<IReadOnlyList<T>> GetAll<T>(Expression<Func<T, bool>> expression) where T : BaseEntity
+        {
+            return await _context.Set<T>()
+                .Where(expression)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
         public IQueryable<T> QueryWhere<T>(Expression<Func<T, bool>> expression) where T : Domain.Contracts.Entities.BaseEntity
         {
             return _context.Set<T>()

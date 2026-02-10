@@ -15,6 +15,7 @@ namespace Application.Interfaces.Repositories
         Task<bool> Any<T>(Expression<Func<T, bool>> expression) where T : BaseEntity;
         Task<T> Get<T>(Expression<Func<T, bool>> expression) where T : BaseEntity;
         Task<IReadOnlyList<T>> GetAll<T>() where T : BaseEntity;
+        Task<IReadOnlyList<T>> GetAll<T>(Expression<Func<T, bool>> expression) where T : BaseEntity;
         IQueryable<T> QueryWhere<T>(Expression<Func<T, bool>> expression) where T : BaseEntity;
     }
 }
