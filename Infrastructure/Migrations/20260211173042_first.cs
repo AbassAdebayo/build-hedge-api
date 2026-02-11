@@ -267,11 +267,11 @@ namespace Infrastructure.Migrations
                 columns: new[] { "Id", "CreatedAtUtc", "CreatedBy", "DomainName", "IsAllowed", "IsDeleted", "Note", "UpdatedAtUtc" },
                 values: new object[,]
                 {
-                    { new Guid("6e3d4962-dcb0-42bc-9c58-7f6209d4a871"), new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc), "hedgesystem", "hotmail.com", false, false, "public provider - blocked for org setup", null },
-                    { new Guid("6e3d4978-dcb0-42ea-9c48-7f6209e5b871"), new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc), "hedgesystem", "greatmoh007@gmail.com", true, false, "developer testing bypass", null },
-                    { new Guid("6e3d4978-dcb0-42ea-9c48-7f6521d4a871"), new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc), "hedgesystem", "outlook.com", false, false, "public provider - blocked for org setup", null },
-                    { new Guid("6e3e8978-dcb0-42ea-9c78-7f6209d4a871"), new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc), "hedgesystem", "gmail.com", false, false, "public provider - blocked for org setup", null },
-                    { new Guid("9f3d4978-dcb0-42ea-9c48-7f8509d4a871"), new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc), "hedgesystem", "yahoo.com", false, false, "public provider - blocked for org setup", null }
+                    { new Guid("6e3d4962-dcb0-42bc-9c58-7f6209d4a871"), new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "hotmail.com", false, false, "Public Provider - Blocked for Org Setup", null },
+                    { new Guid("6e3d4978-dcb0-42ea-9c48-7f6209e5b871"), new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "greatmoh007@gmail.com", true, false, "Developer testing bypass", null },
+                    { new Guid("6e3d4978-dcb0-42ea-9c48-7f6521d4a871"), new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "outlook.com", false, false, "Public Provider - Blocked for Org Setup", null },
+                    { new Guid("6e3e8978-dcb0-42ea-9c78-7f6209d4a871"), new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "gmail.com", false, false, "Public Provider - Blocked for Org Setup", null },
+                    { new Guid("9f3d4978-dcb0-42ea-9c48-7f8509d4a871"), new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "yahoo.com", false, false, "Public Provider - Blocked for Org Setup", null }
                 });
 
             migrationBuilder.InsertData(
@@ -279,9 +279,9 @@ namespace Infrastructure.Migrations
                 columns: new[] { "Id", "CreatedAtUtc", "CreatedBy", "Description", "IsDeleted", "Name", "UpdatedAtUtc" },
                 values: new object[,]
                 {
-                    { new Guid("6e3d4978-dcb0-42ea-9c48-7f6209d4a871"), new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Utc), "hedgesystem", "project manager/contractor who can request price locks.", false, "hedge_editor", null },
-                    { new Guid("6e3d4978-dcb0-42ea-9c48-7f6498d4a871"), new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Utc), "hedgesystem", "stakeholder who can only view risk reports.", false, "hedge_viewer", null },
-                    { new Guid("a45c9e02-1f0b-4e57-b3d8-9b77b4a302be"), new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Utc), "hedgesystem", "corporate executive with full financial approval authority.", false, "hedge_admin", null }
+                    { new Guid("6e3d4978-dcb0-42ea-9c48-7f6209d4a871"), new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "Project manager/Contractor who can request price locks.", false, "Hedge_Editor", null },
+                    { new Guid("6e3d4978-dcb0-42ea-9c48-7f6498d4a871"), new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "Stakeholder who can only view risk reports.", false, "Hedge_Viewer", null },
+                    { new Guid("a45c9e02-1f0b-4e57-b3d8-9b77b4a302be"), new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "Corporate executive with full financial approval authority.", false, "Hedge_Admin", null }
                 });
 
             migrationBuilder.CreateIndex(
