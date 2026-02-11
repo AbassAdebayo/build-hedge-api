@@ -10,7 +10,6 @@ namespace Application.DTOs.Auth
         string LastName,
         string PhoneNumber,
         string ProfilePictureUrl,
-        Guid OrganizationId,
         Guid RoleId
 
         );

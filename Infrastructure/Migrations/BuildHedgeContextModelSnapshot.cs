@@ -64,51 +64,51 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("6e3e8978-dcb0-42ea-9c78-7f6209d4a871"),
                             CreatedAtUtc = new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = "hedgesystem",
+                            CreatedBy = "HedgeSystem",
                             DomainName = "gmail.com",
                             IsAllowed = false,
                             IsDeleted = false,
-                            Note = "public provider - blocked for org setup"
+                            Note = "Public Provider - Blocked for Org Setup"
                         },
                         new
                         {
                             Id = new Guid("9f3d4978-dcb0-42ea-9c48-7f8509d4a871"),
                             CreatedAtUtc = new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = "hedgesystem",
+                            CreatedBy = "HedgeSystem",
                             DomainName = "yahoo.com",
                             IsAllowed = false,
                             IsDeleted = false,
-                            Note = "public provider - blocked for org setup"
+                            Note = "Public Provider - Blocked for Org Setup"
                         },
                         new
                         {
                             Id = new Guid("6e3d4962-dcb0-42bc-9c58-7f6209d4a871"),
                             CreatedAtUtc = new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = "hedgesystem",
+                            CreatedBy = "HedgeSystem",
                             DomainName = "hotmail.com",
                             IsAllowed = false,
                             IsDeleted = false,
-                            Note = "public provider - blocked for org setup"
+                            Note = "Public Provider - Blocked for Org Setup"
                         },
                         new
                         {
                             Id = new Guid("6e3d4978-dcb0-42ea-9c48-7f6521d4a871"),
                             CreatedAtUtc = new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = "hedgesystem",
+                            CreatedBy = "HedgeSystem",
                             DomainName = "outlook.com",
                             IsAllowed = false,
                             IsDeleted = false,
-                            Note = "public provider - blocked for org setup"
+                            Note = "Public Provider - Blocked for Org Setup"
                         },
                         new
                         {
                             Id = new Guid("6e3d4978-dcb0-42ea-9c48-7f6209e5b871"),
                             CreatedAtUtc = new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = "hedgesystem",
+                            CreatedBy = "HedgeSystem",
                             DomainName = "greatmoh007@gmail.com",
                             IsAllowed = true,
                             IsDeleted = false,
-                            Note = "developer testing bypass"
+                            Note = "Developer testing bypass"
                         });
                 });
 
@@ -378,28 +378,28 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("a45c9e02-1f0b-4e57-b3d8-9b77b4a302be"),
                             CreatedAtUtc = new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = "hedgesystem",
-                            Description = "corporate executive with full financial approval authority.",
+                            CreatedBy = "HedgeSystem",
+                            Description = "Corporate executive with full financial approval authority.",
                             IsDeleted = false,
-                            Name = "hedge_admin"
+                            Name = "Hedge_Admin"
                         },
                         new
                         {
                             Id = new Guid("6e3d4978-dcb0-42ea-9c48-7f6209d4a871"),
                             CreatedAtUtc = new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = "hedgesystem",
-                            Description = "project manager/contractor who can request price locks.",
+                            CreatedBy = "HedgeSystem",
+                            Description = "Project manager/Contractor who can request price locks.",
                             IsDeleted = false,
-                            Name = "hedge_editor"
+                            Name = "Hedge_Editor"
                         },
                         new
                         {
                             Id = new Guid("6e3d4978-dcb0-42ea-9c48-7f6498d4a871"),
                             CreatedAtUtc = new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = "hedgesystem",
-                            Description = "stakeholder who can only view risk reports.",
+                            CreatedBy = "HedgeSystem",
+                            Description = "Stakeholder who can only view risk reports.",
                             IsDeleted = false,
-                            Name = "hedge_viewer"
+                            Name = "Hedge_Viewer"
                         });
                 });
 

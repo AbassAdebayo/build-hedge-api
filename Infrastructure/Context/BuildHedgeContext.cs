@@ -66,19 +66,7 @@ namespace Infrastructure.Context
                 .HasIndex(u => u.Email)
                 .IsUnique();
 
-            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
-            {
-                var properties = entityType.GetProperties()
-                    .Where(p => p.ClrType == typeof(string));
-
-                foreach (var property in properties)
-                {
-                    property.SetValueConverter(new ValueConverter<string, string>(
-                        v => v.Trim().ToLower(),
-                        v => v                   
-                    ));
-                }
-            }
+           
         }
 
         private void SeedRoleData(ModelBuilder modelBuilder)

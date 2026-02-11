@@ -30,9 +30,9 @@ namespace Application.Implementation
         private readonly IOrganizationRepository _organizationRepository = organizationRepository ?? throw new ArgumentNullException(nameof(organizationRepository));
         public async Task<AuthResponse> InviteUserToOrganizationAsync(Guid adminUserId, Guid organizationId, AddUserToOrganizationRequestModel request)
         {
-            var isAdminMember = await _membershipRepository.Any<UserOrganizationMembership>(m => m.OrganizationId == request.OrganizationId && m.UserId == adminUserId);
+            var isAdminMember = await _membershipRepository.Any<UserOrganizationMembership>(m => m.OrganizationId == organizationId && m.UserId == adminUserId);
 
-            if (isAdminMember)
+            if (!isAdminMember)
                 return new AuthResponse("This Admin is not a member of this organization.", false);
 
             var existingUser = await _userManager.FindByEmailAsync(request.Email);
@@ -97,7 +97,7 @@ namespace Application.Implementation
 
                     await transaction.CommitAsync();
 
-                    var token = _identityService.GenerateToken(user, request.OrganizationId);
+                    var token = _identityService.GenerateToken(user, organizationId);
 
                     // Send verification mail
                     try
@@ -145,8 +145,8 @@ namespace Application.Implementation
                 try
                 {
                     user.IsVerified = true;
-                    await _userRepository.Update(user);
-                    await _unitOfWork.SaveChangesAsync();
+                    var updatedUser = await _userRepository.Update<User>(user);
+                    var save = await _unitOfWork.SaveChangesAsync();
 
                     var membership = await _membershipRepository.Get<UserOrganizationMembership>(m => m.UserId == user.Id);
 
@@ -154,8 +154,8 @@ namespace Application.Implementation
                     {
                         var organization = await _organizationRepository.Get<Organization>(o => o.Id == membership.OrganizationId);
                         organization.IsActive = true;
-                        await _organizationRepository.Update(organization);
-                        await _unitOfWork.SaveChangesAsync();
+                        var updatedOrg = await _organizationRepository.Update<Organization>(organization);
+                        var saveOrg = await _unitOfWork.SaveChangesAsync();
 
                         await transaction.CommitAsync();
                         return new AuthResponse("Admin validated successfully! Kindly login to setup your organization", true);

@@ -6,7 +6,6 @@
     Layout = null;
 
     var inviteUrl = configuration.GetValue<string>("BuildHedgeUrls:AcceptInviteUrl");
-    var logoUrl = configuration.GetValue<string>("BuildHedgeUrls:Assets:LogoUrl");
 
     var acceptInviteLink = $"{inviteUrl}/{Model.Token}";
 }
