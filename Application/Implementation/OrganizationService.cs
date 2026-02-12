@@ -1,5 +1,6 @@
 ﻿using Application.DTOs;
 using Application.DTOs.Auth;
+using Application.DTOs.Organization;
 using Application.Interfaces.Identity;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
@@ -224,11 +225,86 @@ namespace Application.Implementation
 
         }
 
+        public async Task<BaseResponse<IReadOnlyList<OrganizationResponse>>> GetAllOrganizationsAsync()
+        {
+            var organizations = await _organizationRepository.GetAll<Organization>(org => org.IsActive); 
+            if (organizations is null || !organizations.Any()) 
+            { 
+                _logger.LogError("No organizations found in the database."); 
+                return new BaseResponse<IReadOnlyList<OrganizationResponse>>("No organizations found", false, null!); 
+            } 
+            _logger.LogInformation("Organizations retrieved successfully. Count: {Count}", organizations.Count()); 
+            var organizationResponses = organizations.Select(org => 
+            new OrganizationResponse(org.Id, org.BusinessName)).ToList(); 
+
+                return new BaseResponse<IReadOnlyList<OrganizationResponse>>(
+                $"{organizations.Count} Organizations retrieved successfully", 
+                true, 
+                organizationResponses
+                );
+        }
+
+        public async Task<BaseResponse<IReadOnlyList<OrganizationResponse>>> GetOrganizationsForUserAsync(Guid userId)
+        {
+            var memberships = await _membershipRepository.GetAll<UserOrganizationMembership>(m => m.UserId == userId);
+            var organizationIds = memberships.Select(m => m.OrganizationId).ToList();
+
+            var organizations = await _organizationRepository.GetAll<Organization>(org => organizationIds.Contains(org.Id) && org.IsActive);
+
+            if(organizations is null || !organizations.Any())
+            {
+                _logger.LogError("No organizations found for this user");
+                return new BaseResponse<IReadOnlyList<OrganizationResponse>>("No organizations found for this user", false, null!);
+
+            }
+
+            _logger.LogInformation("Organizations retrieved successfully for this user Count: {Count}", organizations.Count());
+            var organizationResponses = organizations.Select(org => new OrganizationResponse(org.Id, org.BusinessName)).ToList();
+
+            return new BaseResponse<IReadOnlyList<OrganizationResponse>>(
+                $"{organizations.Count} Organizations retrieved successfully for this user",
+                true,
+                organizationResponses
+                );
+        }
+
+        public async Task<BaseResponse<OrganizationDetailsResponse>> GetOrganizationDetailsAsync(Guid organizationId)
+        {
+            var organization = await _organizationRepository.Get<Organization>(org => org.Id == organizationId && org.IsActive);
+            if (organization is null)
+            {
+                _logger.LogError("No organization found in the database.");
+                return new BaseResponse<OrganizationDetailsResponse>("No organization found", false, null!);
+            }
+            _logger.LogInformation("Organization retrieved successfully.");
+
+            var organizationResponses = new OrganizationDetailsResponse(
+                organization.Id,
+                organization.BusinessName,
+                organization.TaxId,
+                GetSubscriptionPlanName(organization.SubscriptionPlan),
+                organization.IsActive,
+                organization.CreatedAtUtc
+                );
+
+            return new BaseResponse<OrganizationDetailsResponse>(
+            "Organization retrieved successfully",
+            true,
+            organizationResponses
+            );
+        }
+
         private static SubscriptionPlan ParseSubscriptionPlan(string subscriptionPlan)
         {
             return Enum.TryParse<SubscriptionPlan>(subscriptionPlan, true, out var parsedPlan)
                 ? parsedPlan
                 : throw new ArgumentException("Invalid subscription plan. Please provide a valid plan.", nameof(subscriptionPlan));
+        }
+
+        private static string GetSubscriptionPlanName(SubscriptionPlan subscriptionPlan)
+        {
+            return Enum.GetName<SubscriptionPlan>(subscriptionPlan) ?? "Invalid Plan";
+
         }
     }
 }

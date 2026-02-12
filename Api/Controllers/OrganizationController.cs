@@ -47,5 +47,40 @@ namespace Api.Controllers
             var inviteUser = await _userService.InviteUserToOrganizationAsync(adminUserId, currentOrgId, request);
             return Ok(inviteUser);
         }
+
+        
+        [HttpGet("user")]
+        [Authorize]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(BaseResponse))]
+        public async Task<IActionResult> GetUserOrganizations()
+        {
+            var userIdString = User?.FindFirst(ClaimTypes.NameIdentifier)!.Value;
+            if (!Guid.TryParse(userIdString, out Guid userId))
+            {
+                return BadRequest("Invalid userId");
+            }
+
+            
+            var userOrganizations = await _organizationService.GetOrganizationsForUserAsync(userId);
+            return Ok(userOrganizations);
+        }
+
+        [HttpGet("all")]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(BaseResponse))]
+        public async Task<IActionResult> GetAllOrganizations()
+        {
+            var organizations = await _organizationService.GetAllOrganizationsAsync();
+            return Ok(organizations);
+        }
+
+       
+        [Authorize]
+        [HttpGet("{organizationId}")]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(BaseResponse))]
+        public async Task<IActionResult> GetOrganizationDetails([FromRoute] Guid organizationId)
+        {
+            var organization = await _organizationService.GetOrganizationDetailsAsync(organizationId);
+            return Ok(organization);
+        }
     }
 }
