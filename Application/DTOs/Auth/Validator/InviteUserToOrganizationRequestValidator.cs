@@ -5,9 +5,9 @@ using System.Text;
 
 namespace Application.DTOs.Auth.Validator
 {
-    public class AddUserToOrganizationRequestValidator : AbstractValidator<AddUserToOrganizationRequestModel>
+    public class InviteUserToOrganizationRequestValidator : AbstractValidator<AddUserToOrganizationRequestModel>
     {
-        public AddUserToOrganizationRequestValidator()
+        public InviteUserToOrganizationRequestValidator()
         {
             RuleFor(x => x.Email)
                 .NotEmpty().WithMessage("Email is required.")

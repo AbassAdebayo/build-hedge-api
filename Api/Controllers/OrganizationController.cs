@@ -12,7 +12,7 @@ namespace Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class OrganizationsController(IOrganizationService organizationService, IUserService userService,
+    public class OrganizationController(IOrganizationService organizationService, IUserService userService,
         ITenantProvider tenantProvider) : ControllerBase
     {
         private readonly IOrganizationService _organizationService = organizationService ?? throw new ArgumentNullException(nameof(organizationService));

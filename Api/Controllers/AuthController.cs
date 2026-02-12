@@ -4,10 +4,13 @@ using Application.Implementation;
 using Application.Interfaces.Identity;
 using Application.Interfaces.Services;
 using Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Net;
+using System.Security.Claims;
 
 namespace Api.Controllers
 {
@@ -26,6 +29,7 @@ namespace Api.Controllers
         private readonly IConfiguration _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         private readonly IUserOrganizationMembershipService _membershipService = membershipService ?? throw new ArgumentNullException(nameof(membershipService));
 
+        [AllowAnonymous]
         [HttpPost("register")]
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(BaseResponse))]
         public async Task<IActionResult> RegisterNewAccount([FromBody] RegisterOrganizationRequestModel request)
@@ -34,12 +38,42 @@ namespace Api.Controllers
             return Ok(registerOrg);
         }
 
+        [AllowAnonymous]
         [HttpGet("verify-user/{token}")]
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(BaseResponse))]
         [ProducesResponseType((int)HttpStatusCode.Unauthorized, Type = typeof(BaseResponse))]
         public async Task<IActionResult> VerifyUser([FromRoute] string token)
         {
             var response = await _userService.VerifyUserAsync(token);
+            return response.Status ? Ok(response) : BadRequest(response);
+        }
+
+        [AllowAnonymous]
+        [EnableRateLimiting("ResendEmailPolicy")]
+        [HttpPost("resend-verification")]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(BaseResponse))]
+        [ProducesResponseType((int)HttpStatusCode.Unauthorized, Type = typeof(BaseResponse))]
+        public async Task<IActionResult> ResendVerificationMail(string email)
+        {
+            var response = await _userService.ResendVerificationEmailAsync(email);
+            return response.Status ? Ok(response) : BadRequest(response);
+        }
+
+        [HttpPost("passwordreset/{token}")]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(BaseResponse))]
+        [ProducesResponseType((int)HttpStatusCode.Unauthorized, Type = typeof(BaseResponse))]
+        public async Task<IActionResult> ResetPassword([FromRoute] string token, [FromBody] ResetPasswordRequestModel request)
+        {
+            var response = await _userService.ResetPasswordAsync(token, request);
+            return response.Status ? Ok(response) : BadRequest(response);
+        }
+
+        [HttpPost("forgotpassword")]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(BaseResponse))]
+        [ProducesResponseType((int)HttpStatusCode.Unauthorized, Type = typeof(BaseResponse))]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordRequestModel request)
+        {
+            var response = await _userService.ForgotPasswordAsync(request);
             return response.Status ? Ok(response) : BadRequest(response);
         }
 
@@ -93,15 +127,25 @@ namespace Api.Controllers
             Response.Headers.Append("Access-Control-Expose-Headers", "Token,TokenExpiry");
             return Ok(tokenResponse);
 
-            //Response.Headers.Add("Token", token);
-            //Response.Headers.Add("TokenExpiry", expiry.ToUnixTimeMilliseconds().ToString());
-            //Response.Headers.Add("Access-Control-Expose-Headers", "Token,TokenExpiry");
-            //return Ok(tokenResponse);
-
-
-
 
         }
+
+        [HttpPost("switch-org/{organizationId}")]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(BaseResponse))]
+        [ProducesResponseType((int)HttpStatusCode.Unauthorized, Type = typeof(BaseResponse))]
+        public async Task<IActionResult> ForgotPassword(Guid organizationId)
+        {
+            var userIdString = User?.FindFirst(ClaimTypes.NameIdentifier)!.Value;
+            if (!Guid.TryParse(userIdString, out Guid userId))
+            {
+                return BadRequest("Invalid userId");
+            }
+
+            var response = await _userService.SwitchOrganizationAsync(userId, organizationId);
+            return response.Status ? Ok(response) : BadRequest(response);
+        }
+
+
     }
 
 }

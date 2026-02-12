@@ -5,7 +5,7 @@
 @{
     Layout = null;
 
-    var inviteUrl = configuration.GetValue<string>("BuildHedgeUrls:AcceptInviteUrl");
+    var inviteUrl = configuration.GetValue<string>("BuildHedgeUrls:VerifyUserUrl");
 
     var acceptInviteLink = $"{inviteUrl}/{Model.Token}";
 }

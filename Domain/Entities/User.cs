@@ -20,5 +20,22 @@ namespace Domain.Entities
 
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
         public ICollection<UserOrganizationMembership> Memberships { get; set; } = new List<UserOrganizationMembership>();
+
+
+        public void ChangePassword(string newPasswordHash, string newHashSalt)
+        {
+            PasswordHash = newPasswordHash;
+            HashSalt = newHashSalt;
+        }
+         public void UpdateProfile(string firstName, string lastName, string phoneNumber, string? profilePictureUrl)
+        {
+            FirstName = firstName;
+            LastName = lastName;
+            PhoneNumber = phoneNumber;
+            if (!string.IsNullOrEmpty(profilePictureUrl))
+            {
+                ProfilePictureUrl = profilePictureUrl;
+            }
+        }
     }
 }
