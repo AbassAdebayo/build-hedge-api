@@ -11,6 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Security.Claims;
 using System.Text;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +38,34 @@ builder.Services.AddRazorPages();
 // Disable default DataAnnotations validation to avoid duplicate messages
 builder.Services.Configure<ApiBehaviorOptions>(options =>
     options.SuppressModelStateInvalidFilter = true);
+
+
+// RateLimiting Setup
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddPolicy("ResendEmailPolicy", httpContext =>
+    {
+        var email = httpContext.Request.Form["Email"].ToString();
+        return RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: email ?? httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                factory: partition => new FixedWindowRateLimiterOptions
+                {
+                    AutoReplenishment = true,
+                    PermitLimit = 1,
+                    Window = TimeSpan.FromMinutes(1)
+                });
+    });
+        
+ 
+    options.OnRejected = async (context, token) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        await context.HttpContext.Response.WriteAsync("Too many requests. Please wait a minute before trying again.", token);
+    };
+
+
+});
 
 // Automatically register all validators in the project
 builder.Services.AddValidatorsFromAssemblyContaining<RegisterOrganizationRequestValidator>();
