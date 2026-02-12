@@ -33,6 +33,7 @@ namespace Infrastructure.IOC.Extensions
                 .AddScoped<IOrganizationService, OrganizationService>()
                 .AddScoped<IUserService, UserService>()
                 .AddScoped<IUserOrganizationMembershipService, UserOrganizationMembershipService>()
+                .AddScoped<IRoleService, RoleService>()
                 .AddScoped<IMailSender, MailSender>()
                 .AddScoped<IMailService, MailService>()
                 .AddScoped<IRazorEngine, RazorEngine>();
