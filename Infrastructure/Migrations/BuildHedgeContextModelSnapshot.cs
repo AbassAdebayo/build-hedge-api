@@ -22,6 +22,87 @@ namespace Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Domain.Entities.Currency", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LastUpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Symbol")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Currencies");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("d3b07384-d9a4-4352-8d0b-6060c57c4c41"),
+                            Code = "USD",
+                            CreatedAtUtc = new DateTime(2026, 2, 16, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedBy = "HedgeSystem",
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "US Dollar",
+                            Symbol = "$"
+                        },
+                        new
+                        {
+                            Id = new Guid("f47ac10b-58cc-4372-a567-0e02b2c3d479"),
+                            Code = "NGN",
+                            CreatedAtUtc = new DateTime(2026, 2, 16, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedBy = "HedgeSystem",
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Nigerian Naira",
+                            Symbol = "₦"
+                        },
+                        new
+                        {
+                            Id = new Guid("550e8400-e29b-41d4-a716-446655440000"),
+                            Code = "EUR",
+                            CreatedAtUtc = new DateTime(2026, 2, 16, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedBy = "HedgeSystem",
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Euro",
+                            Symbol = "€"
+                        });
+                });
+
             modelBuilder.Entity("Domain.Entities.DomainRule", b =>
                 {
                     b.Property<Guid>("Id")
@@ -127,6 +208,13 @@ namespace Infrastructure.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid>("CurrencyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("ExchangeRateAtLock")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<DateTime>("ExpiryDate")
                         .HasColumnType("datetime2");
 
@@ -166,6 +254,8 @@ namespace Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CurrencyId");
 
                     b.HasIndex("MaterialId");
 
@@ -578,6 +668,12 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.HedgeContract", b =>
                 {
+                    b.HasOne("Domain.Entities.Currency", "Currency")
+                        .WithMany()
+                        .HasForeignKey("CurrencyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Domain.Entities.Material", "Material")
                         .WithMany()
                         .HasForeignKey("MaterialId")
@@ -589,6 +685,8 @@ namespace Infrastructure.Migrations
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Currency");
 
                     b.Navigation("Material");
 

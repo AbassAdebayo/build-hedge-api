@@ -8,11 +8,32 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class first : Migration
+    public partial class CurrencyEntityIncluded : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "Currencies",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Code = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Symbol = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastUpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Currencies", x => x.Id);
+                });
+
             migrationBuilder.CreateTable(
                 name: "DomainRules",
                 columns: table => new
@@ -23,6 +44,7 @@ namespace Infrastructure.Migrations
                     Note = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastUpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UpdatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true)
@@ -43,6 +65,7 @@ namespace Infrastructure.Migrations
                     MetadataJson = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastUpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UpdatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true)
@@ -63,6 +86,7 @@ namespace Infrastructure.Migrations
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastUpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UpdatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true)
@@ -81,6 +105,7 @@ namespace Infrastructure.Migrations
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastUpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UpdatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true)
@@ -105,6 +130,7 @@ namespace Infrastructure.Migrations
                     IsVerified = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastUpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UpdatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true)
@@ -124,6 +150,7 @@ namespace Infrastructure.Migrations
                     Timestamp = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastUpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UpdatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true)
@@ -147,9 +174,11 @@ namespace Infrastructure.Migrations
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     TotalBudget = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     EstimatedCompletion = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     OrganizationId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CreatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastUpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UpdatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true)
@@ -176,6 +205,7 @@ namespace Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CreatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastUpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UpdatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true)
@@ -206,6 +236,7 @@ namespace Infrastructure.Migrations
                     RoleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CreatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastUpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UpdatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true)
@@ -234,6 +265,8 @@ namespace Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ProjectId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     MaterialId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CurrencyId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ExchangeRateAtLock = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
                     LockedPrice = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
                     Quantity = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
                     PremiumFee = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
@@ -241,6 +274,7 @@ namespace Infrastructure.Migrations
                     Status = table.Column<int>(type: "int", nullable: false),
                     CreatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastUpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UpdatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true)
@@ -248,6 +282,12 @@ namespace Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_HedgeContracts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_HedgeContracts_Currencies_CurrencyId",
+                        column: x => x.CurrencyId,
+                        principalTable: "Currencies",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_HedgeContracts_Materials_MaterialId",
                         column: x => x.MaterialId,
@@ -263,26 +303,41 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.InsertData(
-                table: "DomainRules",
-                columns: new[] { "Id", "CreatedAtUtc", "CreatedBy", "DomainName", "IsAllowed", "IsDeleted", "Note", "UpdatedAtUtc" },
+                table: "Currencies",
+                columns: new[] { "Id", "Code", "CreatedAtUtc", "CreatedBy", "IsActive", "IsDeleted", "LastUpdatedBy", "Name", "Symbol", "UpdatedAtUtc" },
                 values: new object[,]
                 {
-                    { new Guid("6e3d4962-dcb0-42bc-9c58-7f6209d4a871"), new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "hotmail.com", false, false, "Public Provider - Blocked for Org Setup", null },
-                    { new Guid("6e3d4978-dcb0-42ea-9c48-7f6209e5b871"), new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "greatmoh007@gmail.com", true, false, "Developer testing bypass", null },
-                    { new Guid("6e3d4978-dcb0-42ea-9c48-7f6521d4a871"), new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "outlook.com", false, false, "Public Provider - Blocked for Org Setup", null },
-                    { new Guid("6e3e8978-dcb0-42ea-9c78-7f6209d4a871"), new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "gmail.com", false, false, "Public Provider - Blocked for Org Setup", null },
-                    { new Guid("9f3d4978-dcb0-42ea-9c48-7f8509d4a871"), new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "yahoo.com", false, false, "Public Provider - Blocked for Org Setup", null }
+                    { new Guid("550e8400-e29b-41d4-a716-446655440000"), "EUR", new DateTime(2026, 2, 16, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", true, false, null, "Euro", "€", null },
+                    { new Guid("d3b07384-d9a4-4352-8d0b-6060c57c4c41"), "USD", new DateTime(2026, 2, 16, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", true, false, null, "US Dollar", "$", null },
+                    { new Guid("f47ac10b-58cc-4372-a567-0e02b2c3d479"), "NGN", new DateTime(2026, 2, 16, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", true, false, null, "Nigerian Naira", "₦", null }
+                });
+
+            migrationBuilder.InsertData(
+                table: "DomainRules",
+                columns: new[] { "Id", "CreatedAtUtc", "CreatedBy", "DomainName", "IsAllowed", "IsDeleted", "LastUpdatedBy", "Note", "UpdatedAtUtc" },
+                values: new object[,]
+                {
+                    { new Guid("6e3d4962-dcb0-42bc-9c58-7f6209d4a871"), new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "hotmail.com", false, false, null, "Public Provider - Blocked for Org Setup", null },
+                    { new Guid("6e3d4978-dcb0-42ea-9c48-7f6209e5b871"), new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "greatmoh007@gmail.com", true, false, null, "Developer testing bypass", null },
+                    { new Guid("6e3d4978-dcb0-42ea-9c48-7f6521d4a871"), new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "outlook.com", false, false, null, "Public Provider - Blocked for Org Setup", null },
+                    { new Guid("6e3e8978-dcb0-42ea-9c78-7f6209d4a871"), new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "gmail.com", false, false, null, "Public Provider - Blocked for Org Setup", null },
+                    { new Guid("9f3d4978-dcb0-42ea-9c48-7f8509d4a871"), new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "yahoo.com", false, false, null, "Public Provider - Blocked for Org Setup", null }
                 });
 
             migrationBuilder.InsertData(
                 table: "Roles",
-                columns: new[] { "Id", "CreatedAtUtc", "CreatedBy", "Description", "IsDeleted", "Name", "UpdatedAtUtc" },
+                columns: new[] { "Id", "CreatedAtUtc", "CreatedBy", "Description", "IsDeleted", "LastUpdatedBy", "Name", "UpdatedAtUtc" },
                 values: new object[,]
                 {
-                    { new Guid("6e3d4978-dcb0-42ea-9c48-7f6209d4a871"), new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "Project manager/Contractor who can request price locks.", false, "Hedge_Editor", null },
-                    { new Guid("6e3d4978-dcb0-42ea-9c48-7f6498d4a871"), new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "Stakeholder who can only view risk reports.", false, "Hedge_Viewer", null },
-                    { new Guid("a45c9e02-1f0b-4e57-b3d8-9b77b4a302be"), new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "Corporate executive with full financial approval authority.", false, "Hedge_Admin", null }
+                    { new Guid("6e3d4978-dcb0-42ea-9c48-7f6209d4a871"), new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "Project manager/Contractor who can request price locks.", false, null, "Hedge_Editor", null },
+                    { new Guid("6e3d4978-dcb0-42ea-9c48-7f6498d4a871"), new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "Stakeholder who can only view risk reports.", false, null, "Hedge_Viewer", null },
+                    { new Guid("a45c9e02-1f0b-4e57-b3d8-9b77b4a302be"), new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "Corporate executive with full financial approval authority.", false, null, "Hedge_Admin", null }
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HedgeContracts_CurrencyId",
+                table: "HedgeContracts",
+                column: "CurrencyId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_HedgeContracts_MaterialId",
@@ -349,6 +404,9 @@ namespace Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "UserRoles");
+
+            migrationBuilder.DropTable(
+                name: "Currencies");
 
             migrationBuilder.DropTable(
                 name: "Projects");
