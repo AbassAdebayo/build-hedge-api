@@ -19,6 +19,7 @@ namespace Infrastructure.Context
             //base.OnModelCreating(modelBuilder);
             SeedRoleData(modelBuilder);
             SeedDomainRules(modelBuilder);
+            SeedCurrencies(modelBuilder);
 
             // 1. Define the Composite Key (User + Org must be unique)
             modelBuilder.Entity<UserOrganizationMembership>(entity =>
@@ -42,6 +43,7 @@ namespace Infrastructure.Context
                 entity.Property(e => e.LockedPrice).HasPrecision(18, 4);
                 entity.Property(e => e.PremiumFee).HasPrecision(18, 4);
                 entity.Property(e => e.Quantity).HasPrecision(18, 4);
+                entity.Property(e => e.ExchangeRateAtLock).HasPrecision(18, 4);
             });
 
             modelBuilder.Entity<MaterialPriceHistory>()
@@ -113,7 +115,7 @@ namespace Infrastructure.Context
             modelBuilder.Entity<Role>().HasData(roles);
         }
 
-        private  void SeedDomainRules(ModelBuilder modelBuilder)
+        private void SeedDomainRules(ModelBuilder modelBuilder)
         {
             var creator = "HedgeSystem";
             var timeCreated = DateTime.SpecifyKind(new DateTime(2026, 02, 09), DateTimeKind.Utc);
@@ -128,6 +130,41 @@ namespace Infrastructure.Context
             
         }
 
+        private void SeedCurrencies(ModelBuilder modelBuilder)
+        {
+            var createdBy = "HedgeSystem";
+            var createdAt = DateTime.SpecifyKind(new DateTime(2026, 02, 16), DateTimeKind.Utc);
+            modelBuilder.Entity<Currency>().HasData(
+                new Currency
+                {
+                    Id = new Guid("d3b07384-d9a4-4352-8d0b-6060c57c4c41"),
+                    Code = "USD",
+                    Name = "US Dollar",
+                    Symbol = "$",
+                    CreatedAtUtc = createdAt,
+                    CreatedBy = createdBy,
+                },
+                new Currency
+                {
+                    Id = new Guid("f47ac10b-58cc-4372-a567-0e02b2c3d479"),
+                    Code = "NGN",
+                    Name = "Nigerian Naira",
+                    Symbol = "₦",
+                    CreatedAtUtc = createdAt,
+                    CreatedBy = createdBy,
+                },
+                new Currency
+                {
+                    Id = new Guid("550e8400-e29b-41d4-a716-446655440000"),
+                    Code = "EUR",
+                    Name = "Euro",
+                    Symbol = "€",
+                    CreatedAtUtc = createdAt,
+                    CreatedBy = createdBy
+                }
+            );
+        }
+
         DbSet<HedgeContract> HedgeContracts => Set<HedgeContract>();
         DbSet<Material> Materials => Set<Material>();
         DbSet<MaterialPriceHistory> MaterialPriceHistories => Set<MaterialPriceHistory>();
@@ -138,5 +175,6 @@ namespace Infrastructure.Context
         DbSet<User> Users => Set<User>();
         DbSet<UserRole> UserRoles => Set<UserRole>();
         DbSet<DomainRule> DomainRules => Set<DomainRule>();
+        DbSet<Currency> Currencies => Set<Currency>();
     }
 }

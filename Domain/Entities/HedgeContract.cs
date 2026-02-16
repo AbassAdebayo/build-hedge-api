@@ -13,8 +13,9 @@ namespace Domain.Entities
 
         public Guid MaterialId { get; set; }
         public Material Material { get; set; } = null!;
-
-
+        public Currency Currency { get; set; }
+        public Guid CurrencyId { get; set; }
+        public decimal ExchangeRateAtLock { get; set; }
         public decimal LockedPrice { get; set; }
         public decimal Quantity { get; set; }
         public decimal PremiumFee { get; set; }
