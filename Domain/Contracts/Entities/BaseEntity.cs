@@ -11,6 +11,7 @@ namespace Domain.Contracts.Entities
         public Guid Id { get; set; } = Guid.NewGuid();
         public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
         public string? CreatedBy { get; set; }
+        public string? LastUpdatedBy { get; set; }
         public DateTime? UpdatedAtUtc { get; set; }
         public bool IsDeleted { get; set; } = false;
 

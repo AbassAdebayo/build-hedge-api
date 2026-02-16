@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿using Application.Tenant;
+using Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
@@ -8,8 +9,11 @@ using System.Text;
 
 namespace Infrastructure.Context
 {
-    public class BuildHedgeContext(DbContextOptions<BuildHedgeContext> options) : DbContext(options)
+    public class BuildHedgeContext(DbContextOptions<BuildHedgeContext> options,
+        ITenantProvider tenantProvider) : DbContext(options)
     {
+        private readonly Guid _tenantId = tenantProvider.GetTenantId();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             //base.OnModelCreating(modelBuilder);
@@ -52,6 +56,12 @@ namespace Infrastructure.Context
                 .HasForeignKey(p => p.OrganizationId);
 
             });
+
+            modelBuilder.Entity<Project>()
+                .HasQueryFilter(p => p.OrganizationId == _tenantId);
+
+            modelBuilder.Entity<Project>()
+                .HasQueryFilter(p => p.OrganizationId == _tenantId);
 
             // Map Material Metadata to JSONB for AI flexibility
             modelBuilder.Entity<Material>()

@@ -34,6 +34,7 @@ namespace Infrastructure.IOC.Extensions
                 .AddScoped<IUserService, UserService>()
                 .AddScoped<IUserOrganizationMembershipService, UserOrganizationMembershipService>()
                 .AddScoped<IRoleService, RoleService>()
+                .AddScoped<IProjectService, ProjectService>()
                 .AddScoped<IMailSender, MailSender>()
                 .AddScoped<IMailService, MailService>()
                 .AddScoped<IRazorEngine, RazorEngine>();
@@ -48,6 +49,7 @@ namespace Infrastructure.IOC.Extensions
                 .AddScoped<IBaseRepository, BaseRepository>()
                 .AddScoped<IOrganizationRepository, OrganizationRepository>()
                 .AddScoped<IRoleRepository, RoleRepository>()
+                .AddScoped<IProjectRepository, ProjectRepository>()
                 .AddScoped<IUserOrganizationMembershipRepository, UserOrganizationMembershipRepository>();
 
 
