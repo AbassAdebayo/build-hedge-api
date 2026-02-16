@@ -10,6 +10,7 @@ namespace Domain.Entities
         public required string Name { get; set; }
         public decimal TotalBudget { get; set; }
         public DateTime EstimatedCompletion { get; set; }
+        public string? Description { get; set; }
 
         // Relationship to Organization
         public Guid OrganizationId { get; set; }

@@ -1,5 +1,6 @@
 ﻿using Application.DTOs;
 using Application.DTOs.Auth;
+using Application.DTOs.Project;
 using Application.Interfaces.Services;
 using Application.Tenant;
 using Microsoft.AspNetCore.Authorization;
@@ -13,11 +14,12 @@ namespace Api.Controllers
     [Route("api/[controller]")]
     [ApiController]
     public class OrganizationController(IOrganizationService organizationService, IUserService userService,
-        ITenantProvider tenantProvider) : ControllerBase
+        ITenantProvider tenantProvider, IProjectService projectService) : ControllerBase
     {
         private readonly IOrganizationService _organizationService = organizationService ?? throw new ArgumentNullException(nameof(organizationService));
         private readonly IUserService _userService = userService ?? throw new ArgumentNullException(nameof(userService));
         private readonly ITenantProvider _tenantProvider = tenantProvider ?? throw new ArgumentNullException(nameof(tenantProvider));
+        private readonly IProjectService _projectService = projectService ?? throw new ArgumentNullException(nameof(projectService));
 
         [HttpPost("create")]
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(BaseResponse))]
@@ -81,6 +83,42 @@ namespace Api.Controllers
         {
             var organization = await _organizationService.GetOrganizationDetailsAsync(organizationId);
             return Ok(organization);
+        }
+
+        [Authorize(Roles = "Hedge_Admin")]
+        [HttpPost("create-project")]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(BaseResponse))]
+        public async Task<IActionResult> CreateProject([FromBody] CreateProjectRequestModel request)
+        {
+            var createProject = await _projectService.CreateProjectAsync(request);
+            return Ok(createProject);
+        }
+
+        [Authorize(Roles = "Hedge_Admin")]
+        [HttpGet("projects/{projectId}")]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(BaseResponse))]
+        public async Task<IActionResult> GetProject([FromRoute] Guid projectId)
+        {
+            var project = await _projectService.GetProjectDetails(projectId);
+            return Ok(project);
+        }
+
+        [Authorize(Roles = "Hedge_Admin, Hedge_Editor")]
+        [HttpGet("projects")]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(BaseResponse))]
+        public async Task<IActionResult> GetAllProjects()
+        {
+            var projects = await _projectService.GetAllProjects();
+            return Ok(projects);
+        }
+
+        [Authorize(Roles = "Hedge_Admin, Hedge_Editor")]
+        [HttpPut("projects/{id}")]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(BaseResponse))]
+        public async Task<IActionResult> UpdateProject([FromRoute]Guid id, [FromBody] UpdateProjectRequestModel request)
+        {
+            var updateProject = await _projectService.UpdateProjectAsync(id, request);
+            return updateProject.Status ? Ok(updateProject) : BadRequest(updateProject);
         }
     }
 }
