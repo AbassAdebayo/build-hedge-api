@@ -1,4 +1,5 @@
 ﻿using Application.DTOs;
+using Application.ExchangeRate;
 using Application.Interfaces.Services;
 using Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
@@ -10,9 +11,11 @@ namespace Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class CurrencyController(ICurrencyService currencyService) : ControllerBase
+    public class CurrencyController(ICurrencyService currencyService,
+        ICurrencyExchangeService currencyExchange) : ControllerBase
     {
         private readonly ICurrencyService _currencyService = currencyService ?? throw new ArgumentNullException(nameof(currencyService));
+        private readonly ICurrencyExchangeService _currencyExchange = currencyExchange ?? throw new ArgumentNullException(nameof(currencyExchange));
 
         [AllowAnonymous]
         [HttpGet("all")]
@@ -22,6 +25,13 @@ namespace Api.Controllers
             var currencies = await _currencyService.GetAllCurrenciesAsync();
 
             return Ok(currencies);
+        }
+
+        [HttpGet("preview-rate")]
+        public async Task<IActionResult> GetPreview([FromQuery]string from, [FromQuery]string to)
+        {
+            var rate = await _currencyExchange.GetExchangeRateAsync(from, to);
+            return Ok(new { Rate = rate, Timestamp = DateTime.UtcNow });
         }
     }
 }

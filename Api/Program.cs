@@ -1,7 +1,9 @@
 using Application.DTOs.Auth.Validator;
+using Application.ExchangeRate;
 using Domain.Configuration;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Infrastructure.ExchangeRate;
 using Infrastructure.Extensions;
 using Infrastructure.IOC.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -22,7 +24,9 @@ builder.Services.AddInfrastructure(builder.Configuration)
 builder.Services.Configure<DataProtectionTokenProviderOptions>(o =>
    o.TokenLifespan = TimeSpan.FromHours(3));
 
-builder.Services.AddDatabase(builder.Configuration.GetConnectionString("HedgeConnection")!);
+builder.Services.AddDatabase(builder.Configuration.GetConnectionString("HedgeConnection")!)
+    .AddMemoryCache();
+builder.Services.AddHttpClient<ICurrencyExchangeService, CurrencyExchangeService>();
 
 // Add Email Configurations
 builder.Services.Configure<EmailConfiguration>(builder.Configuration.GetSection("EmailConfiguration"));

@@ -1,4 +1,5 @@
-﻿using Application.Implementation;
+﻿using Application.ExchangeRate;
+using Application.Implementation;
 using Application.Interfaces.Identity;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
@@ -8,6 +9,7 @@ using Domain.Entities;
 using Domain.Messaging;
 using Domain.TemplateEngine;
 using Infrastructure.Context;
+using Infrastructure.ExchangeRate;
 using Infrastructure.Identity;
 using Infrastructure.MailingService;
 using Infrastructure.Messaging;
@@ -36,6 +38,8 @@ namespace Infrastructure.IOC.Extensions
                 .AddScoped<IRoleService, RoleService>()
                 .AddScoped<IProjectService, ProjectService>()
                 .AddScoped<ICurrencyService, CurrencyService>()
+                .AddScoped<IMaterialService, MaterialService>()
+                .AddScoped<IHedgeContractService, HedgeContractService>()
                 .AddScoped<IMailSender, MailSender>()
                 .AddScoped<IMailService, MailService>()
                 .AddScoped<IRazorEngine, RazorEngine>();
@@ -52,8 +56,9 @@ namespace Infrastructure.IOC.Extensions
                 .AddScoped<IRoleRepository, RoleRepository>()
                 .AddScoped<IProjectRepository, ProjectRepository>()
                 .AddScoped<ICurrencyRepository, CurrencyRepository>()
+                .AddScoped<IMaterialRepository, MaterialRepository>()
+                .AddScoped<IHedgeContractRepository, HedgeContractRepository>()
                 .AddScoped<IUserOrganizationMembershipRepository, UserOrganizationMembershipRepository>();
-
 
 
         }

@@ -1,5 +1,7 @@
 ﻿using Application.DTOs;
 using Application.DTOs.Auth;
+using Application.DTOs.HedgeContract;
+using Application.DTOs.Material;
 using Application.DTOs.Project;
 using Application.Interfaces.Services;
 using Application.Tenant;
@@ -14,12 +16,15 @@ namespace Api.Controllers
     [Route("api/[controller]")]
     [ApiController]
     public class OrganizationController(IOrganizationService organizationService, IUserService userService,
-        ITenantProvider tenantProvider, IProjectService projectService) : ControllerBase
+        ITenantProvider tenantProvider, IProjectService projectService,
+        IMaterialService materialService, IHedgeContractService hedgeService) : ControllerBase
     {
         private readonly IOrganizationService _organizationService = organizationService ?? throw new ArgumentNullException(nameof(organizationService));
         private readonly IUserService _userService = userService ?? throw new ArgumentNullException(nameof(userService));
         private readonly ITenantProvider _tenantProvider = tenantProvider ?? throw new ArgumentNullException(nameof(tenantProvider));
         private readonly IProjectService _projectService = projectService ?? throw new ArgumentNullException(nameof(projectService));
+        private readonly IMaterialService _materialService = materialService ?? throw new ArgumentNullException(nameof(materialService));
+        private readonly IHedgeContractService _hedgesService = hedgeService ?? throw new ArgumentNullException(nameof(_hedgesService));
 
         [HttpPost("create")]
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(BaseResponse))]
@@ -50,22 +55,6 @@ namespace Api.Controllers
             return Ok(inviteUser);
         }
 
-        
-        [HttpGet("user")]
-        [Authorize]
-        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(BaseResponse))]
-        public async Task<IActionResult> GetUserOrganizations()
-        {
-            var userIdString = User?.FindFirst(ClaimTypes.NameIdentifier)!.Value;
-            if (!Guid.TryParse(userIdString, out Guid userId))
-            {
-                return BadRequest("Invalid userId");
-            }
-
-            
-            var userOrganizations = await _organizationService.GetOrganizationsForUserAsync(userId);
-            return Ok(userOrganizations);
-        }
 
         [HttpGet("all")]
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(BaseResponse))]
@@ -119,6 +108,59 @@ namespace Api.Controllers
         {
             var updateProject = await _projectService.UpdateProjectAsync(id, request);
             return updateProject.Status ? Ok(updateProject) : BadRequest(updateProject);
+        }
+
+        [Authorize(Roles = "Hedge_Admin")]
+        [HttpPost("create-material")]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(BaseResponse))]
+        public async Task<IActionResult> CreateMaterial([FromBody] CreateMaterialRequestModel request)
+        {
+            var createMaterial = await _materialService.CreateMaterialAsync(request);
+            return Ok(createMaterial);
+        }
+
+        [Authorize(Roles = "Hedge_Admin, Hedge_Editor")]
+        [HttpGet("materials")]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(BaseResponse))]
+        public async Task<IActionResult> GetAllMaterials()
+        {
+            var materials = await _materialService.GetAllMaterialsAsync();
+            return Ok(materials);
+        }
+
+
+        /// <summary>
+        /// Step 1: Generates a quote for multiple materials.
+        /// </summary>
+        [Authorize(Roles = "Hedge_Admin, Hedge_Editor")]
+        [HttpPost("create-hedges/preview")]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(BaseResponse))]
+        public async Task<IActionResult> Preview([FromBody] CreateHedgeContractRequestModel request)
+        {
+            var createHedges = await _hedgesService.CreateProjectHedgesAsync(request, isPreview: true);
+            return Ok(createHedges);
+        }
+
+
+        /// <summary>
+        /// Step 2: Finalizes and saves the hedge contracts to the database.
+        /// </summary>
+        [Authorize(Roles = "Hedge_Admin, Hedge_Editor")]
+        [HttpPost("create-hedges/commit")]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(BaseResponse))]
+        public async Task<IActionResult> CreateProjectHedges([FromBody] CreateHedgeContractRequestModel request)
+        {
+            var createHedges = await _hedgesService.CreateProjectHedgesAsync(request, isPreview: false);
+            return Ok(createHedges);
+        }
+
+        [Authorize(Roles = "Hedge_Admin, Hedge_Editor")]
+        [HttpGet("project-hedges")]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(BaseResponse))]
+        public async Task<IActionResult> GetAllProjectHedges()
+        {
+            var projectHedges = await _hedgesService.GetAllProjectHedges();
+            return Ok(projectHedges);
         }
     }
 }

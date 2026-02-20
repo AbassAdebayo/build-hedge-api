@@ -14,13 +14,15 @@ namespace Application.DTOs.Auth
         string AdminPhoneNumber,
         string ProfilePictureUrl,
         string AdminPassword,
-        string AdminConfirmPassword
+        string AdminConfirmPassword,
+        Guid CurrencyId
     );
 
     public record AddOrganizationToExistingAdminRequest(
         string BusinessName,
         string SubscriptionPlan,
-        string? TaxId
+        string? TaxId,
+        Guid CurrencyId
     );
 
 }

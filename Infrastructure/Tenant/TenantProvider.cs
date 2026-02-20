@@ -11,7 +11,7 @@ namespace Infrastructure.Tenant
     {
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
 
-        public string GetTenantAdminName()
+        public string GetTenantUserName()
         {
             
             var claimUserName = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Name)?.Value;

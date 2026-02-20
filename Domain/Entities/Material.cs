@@ -16,6 +16,8 @@ namespace Domain.Entities
         // Metadata for AI (Sentiment, Tariff codes)
         public string? MetadataJson { get; set; }
 
+        public Guid OrganizationId { get; set; }
+
         public ICollection<MaterialPriceHistory> PriceHistories { get; set; } = new List<MaterialPriceHistory>();
     }
 }

@@ -11,6 +11,9 @@ namespace Domain.Entities
         public Guid ProjectId { get; set; }
         public Project Project { get; set; } = null!;
 
+        public Guid OrganizationId { get; set; }
+        public Organization Organization { get; set; } = null!;
+
         public Guid MaterialId { get; set; }
         public Material Material { get; set; } = null!;
         public Currency Currency { get; set; }
@@ -22,5 +25,6 @@ namespace Domain.Entities
         public DateTime ExpiryDate { get; set; }
 
         public ContractStatus Status { get; set; }
+        public decimal TotalValueBaseCurrency { get; set; }
     }
 }

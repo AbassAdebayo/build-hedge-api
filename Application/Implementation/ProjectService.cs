@@ -23,7 +23,7 @@ namespace Application.Implementation
         private readonly IUnitOfWork _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         private readonly ILogger<ProjectService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         private readonly Guid _tenantProvider = tenantProvider.GetTenantId();
-        private readonly string _tenantUserName = tenantProvider.GetTenantAdminName();
+        private readonly string _tenantUserName = tenantProvider.GetTenantUserName();
         public async Task<BaseResponse> CreateProjectAsync(CreateProjectRequestModel request)
         {
             var organization = await _organizationRepository.Get<Organization>(org => org.Id == _tenantProvider);

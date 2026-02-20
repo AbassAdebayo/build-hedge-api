@@ -23,6 +23,9 @@ namespace Application.DTOs.Auth.Validator
 
             RuleFor(x => x.TaxId)
                 .MaximumLength(50).WithMessage("Tax ID cannot exceed 50 characters.");
+            RuleFor(x => x.CurrencyId)
+                .NotEmpty().WithMessage("Currency is required");
+
         }
     }
 }

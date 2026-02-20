@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class CurrencyEntityIncluded : Migration
+    public partial class first : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -63,6 +63,7 @@ namespace Infrastructure.Migrations
                     TickerSymbol = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Unit = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     MetadataJson = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    OrganizationId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CreatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     LastUpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -83,6 +84,7 @@ namespace Infrastructure.Migrations
                     BusinessName = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     TaxId = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     SubscriptionPlan = table.Column<int>(type: "int", nullable: false),
+                    BaseCurrencyCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -190,8 +192,7 @@ namespace Infrastructure.Migrations
                         name: "FK_Projects_Organizations_OrganizationId",
                         column: x => x.OrganizationId,
                         principalTable: "Organizations",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -264,6 +265,7 @@ namespace Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ProjectId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    OrganizationId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     MaterialId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CurrencyId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ExchangeRateAtLock = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
@@ -272,6 +274,7 @@ namespace Infrastructure.Migrations
                     PremiumFee = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
                     ExpiryDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Status = table.Column<int>(type: "int", nullable: false),
+                    TotalValueBaseCurrency = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
                     CreatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     LastUpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -295,6 +298,12 @@ namespace Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
+                        name: "FK_HedgeContracts_Organizations_OrganizationId",
+                        column: x => x.OrganizationId,
+                        principalTable: "Organizations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
                         name: "FK_HedgeContracts_Projects_ProjectId",
                         column: x => x.ProjectId,
                         principalTable: "Projects",
@@ -307,9 +316,9 @@ namespace Infrastructure.Migrations
                 columns: new[] { "Id", "Code", "CreatedAtUtc", "CreatedBy", "IsActive", "IsDeleted", "LastUpdatedBy", "Name", "Symbol", "UpdatedAtUtc" },
                 values: new object[,]
                 {
-                    { new Guid("550e8400-e29b-41d4-a716-446655440000"), "EUR", new DateTime(2026, 2, 16, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", true, false, null, "Euro", "€", null },
-                    { new Guid("d3b07384-d9a4-4352-8d0b-6060c57c4c41"), "USD", new DateTime(2026, 2, 16, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", true, false, null, "US Dollar", "$", null },
-                    { new Guid("f47ac10b-58cc-4372-a567-0e02b2c3d479"), "NGN", new DateTime(2026, 2, 16, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", true, false, null, "Nigerian Naira", "₦", null }
+                    { new Guid("550e8400-e29b-41d4-a716-446655440000"), "EUR", new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", true, false, null, "Euro", "€", null },
+                    { new Guid("d3b07384-d9a4-4352-8d0b-6060c57c4c41"), "USD", new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", true, false, null, "US Dollar", "$", null },
+                    { new Guid("f47ac10b-58cc-4372-a567-0e02b2c3d479"), "NGN", new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", true, false, null, "Nigerian Naira", "₦", null }
                 });
 
             migrationBuilder.InsertData(
@@ -317,22 +326,38 @@ namespace Infrastructure.Migrations
                 columns: new[] { "Id", "CreatedAtUtc", "CreatedBy", "DomainName", "IsAllowed", "IsDeleted", "LastUpdatedBy", "Note", "UpdatedAtUtc" },
                 values: new object[,]
                 {
-                    { new Guid("6e3d4962-dcb0-42bc-9c58-7f6209d4a871"), new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "hotmail.com", false, false, null, "Public Provider - Blocked for Org Setup", null },
-                    { new Guid("6e3d4978-dcb0-42ea-9c48-7f6209e5b871"), new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "greatmoh007@gmail.com", true, false, null, "Developer testing bypass", null },
-                    { new Guid("6e3d4978-dcb0-42ea-9c48-7f6521d4a871"), new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "outlook.com", false, false, null, "Public Provider - Blocked for Org Setup", null },
-                    { new Guid("6e3e8978-dcb0-42ea-9c78-7f6209d4a871"), new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "gmail.com", false, false, null, "Public Provider - Blocked for Org Setup", null },
-                    { new Guid("9f3d4978-dcb0-42ea-9c48-7f8509d4a871"), new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "yahoo.com", false, false, null, "Public Provider - Blocked for Org Setup", null }
+                    { new Guid("6e3d4962-dcb0-42bc-9c58-7f6209d4a871"), new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "hotmail.com", false, false, null, "Public Provider - Blocked for Org Setup", null },
+                    { new Guid("6e3d4978-dcb0-42ea-9c48-7f6209e5b871"), new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "greatmoh007@gmail.com", true, false, null, "Developer testing bypass", null },
+                    { new Guid("6e3d4978-dcb0-42ea-9c48-7f6521d4a871"), new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "outlook.com", false, false, null, "Public Provider - Blocked for Org Setup", null },
+                    { new Guid("6e3e8978-dcb0-42ea-9c78-7f6209d4a871"), new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "gmail.com", false, false, null, "Public Provider - Blocked for Org Setup", null },
+                    { new Guid("9f3d4978-dcb0-42ea-9c48-7f8509d4a871"), new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "yahoo.com", false, false, null, "Public Provider - Blocked for Org Setup", null }
                 });
+
+            migrationBuilder.InsertData(
+                table: "Organizations",
+                columns: new[] { "Id", "BaseCurrencyCode", "BusinessName", "CreatedAtUtc", "CreatedBy", "IsActive", "IsDeleted", "LastUpdatedBy", "SubscriptionPlan", "TaxId", "UpdatedAtUtc" },
+                values: new object[] { new Guid("c8f2e6ab-9f34-4b97-8b7c-1a5e86d78e42"), "NGN", "Build Hedge", new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc), "Hedge_System", true, false, null, 1, null, null });
 
             migrationBuilder.InsertData(
                 table: "Roles",
                 columns: new[] { "Id", "CreatedAtUtc", "CreatedBy", "Description", "IsDeleted", "LastUpdatedBy", "Name", "UpdatedAtUtc" },
                 values: new object[,]
                 {
-                    { new Guid("6e3d4978-dcb0-42ea-9c48-7f6209d4a871"), new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "Project manager/Contractor who can request price locks.", false, null, "Hedge_Editor", null },
-                    { new Guid("6e3d4978-dcb0-42ea-9c48-7f6498d4a871"), new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "Stakeholder who can only view risk reports.", false, null, "Hedge_Viewer", null },
-                    { new Guid("a45c9e02-1f0b-4e57-b3d8-9b77b4a302be"), new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "Corporate executive with full financial approval authority.", false, null, "Hedge_Admin", null }
+                    { new Guid("6e3d4978-dcb0-42ea-9c48-7f6209d4a871"), new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "Project manager/Contractor who can request price locks.", false, null, "Hedge_Editor", null },
+                    { new Guid("6e3d4978-dcb0-42ea-9c48-7f6498d4a871"), new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "Stakeholder who can only view risk reports.", false, null, "Hedge_Viewer", null },
+                    { new Guid("a45c9e02-1f0b-4e57-b3d8-9b77b4a302be"), new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc), "HedgeSystem", "Corporate executive with full financial approval authority.", false, null, "Hedge_Admin", null },
+                    { new Guid("d2719e67-52f4-4f9c-bdb2-123456789abc"), new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc), "Hedge_System", "Sees total revenue, manages global fees, and views all Orgs, Edit App settings.", false, null, "Hedge_Owner", null }
                 });
+
+            migrationBuilder.InsertData(
+                table: "Users",
+                columns: new[] { "Id", "CreatedAtUtc", "CreatedBy", "Email", "FirstName", "HashSalt", "IsDeleted", "IsVerified", "LastName", "LastUpdatedBy", "PasswordHash", "PhoneNumber", "ProfilePictureUrl", "UpdatedAtUtc" },
+                values: new object[] { new Guid("c8f2e5ab-9f34-4b97-8b7c-1a5e86c77e42"), new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc), "Hedge_System", "controller@hedge.com", "Hedge", null, false, true, "Controller", null, "AQAAAAEAACcQAAAAEP2pYoh7N/0gJ7DyDXZp2oc62m9yeip7DrFBKr5u43ZlnJVvciJFghhjmow0DkG2Zg==", "+2349117690426", null, null });
+
+            migrationBuilder.InsertData(
+                table: "Memberships",
+                columns: new[] { "OrganizationId", "UserId", "CreatedAtUtc", "CreatedBy", "Id", "IsDeleted", "JoinedAtUtc", "LastUpdatedBy", "RoleInOrganization", "UpdatedAtUtc" },
+                values: new object[] { new Guid("c8f2e6ab-9f34-4b97-8b7c-1a5e86d78e42"), new Guid("c8f2e5ab-9f34-4b97-8b7c-1a5e86c77e42"), new DateTime(2026, 2, 20, 16, 11, 46, 394, DateTimeKind.Utc).AddTicks(7218), "Hedge_System", new Guid("7ad9b1e1-4c23-46a2-b8e4-219ab417f71f"), false, new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc), null, "Hedge_Owner", null });
 
             migrationBuilder.CreateIndex(
                 name: "IX_HedgeContracts_CurrencyId",
@@ -343,6 +368,11 @@ namespace Infrastructure.Migrations
                 name: "IX_HedgeContracts_MaterialId",
                 table: "HedgeContracts",
                 column: "MaterialId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HedgeContracts_OrganizationId",
+                table: "HedgeContracts",
+                column: "OrganizationId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_HedgeContracts_ProjectId",

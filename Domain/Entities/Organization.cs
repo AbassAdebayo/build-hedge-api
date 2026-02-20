@@ -11,6 +11,7 @@ namespace Domain.Entities
         public required string BusinessName { get; set; }
         public string? TaxId { get; set; }
         public SubscriptionPlan SubscriptionPlan { get; set; }
+        public string BaseCurrencyCode { get; set; } = null!;
 
         public bool IsActive { get; set; }
         public ICollection<Project> Projects { get; set; } = new List<Project>();

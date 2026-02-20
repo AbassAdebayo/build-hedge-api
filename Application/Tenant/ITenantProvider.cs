@@ -7,6 +7,6 @@ namespace Application.Tenant
     public interface ITenantProvider
     {
         Guid GetTenantId();
-        string GetTenantAdminName();
+        string GetTenantUserName();
     }
 }
