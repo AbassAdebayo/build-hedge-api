@@ -72,7 +72,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("d3b07384-d9a4-4352-8d0b-6060c57c4c41"),
                             Code = "USD",
-                            CreatedAtUtc = new DateTime(2026, 2, 16, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAtUtc = new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc),
                             CreatedBy = "HedgeSystem",
                             IsActive = true,
                             IsDeleted = false,
@@ -83,7 +83,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("f47ac10b-58cc-4372-a567-0e02b2c3d479"),
                             Code = "NGN",
-                            CreatedAtUtc = new DateTime(2026, 2, 16, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAtUtc = new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc),
                             CreatedBy = "HedgeSystem",
                             IsActive = true,
                             IsDeleted = false,
@@ -94,7 +94,7 @@ namespace Infrastructure.Migrations
                         {
                             Id = new Guid("550e8400-e29b-41d4-a716-446655440000"),
                             Code = "EUR",
-                            CreatedAtUtc = new DateTime(2026, 2, 16, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAtUtc = new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc),
                             CreatedBy = "HedgeSystem",
                             IsActive = true,
                             IsDeleted = false,
@@ -147,7 +147,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("6e3e8978-dcb0-42ea-9c78-7f6209d4a871"),
-                            CreatedAtUtc = new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAtUtc = new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc),
                             CreatedBy = "HedgeSystem",
                             DomainName = "gmail.com",
                             IsAllowed = false,
@@ -157,7 +157,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("9f3d4978-dcb0-42ea-9c48-7f8509d4a871"),
-                            CreatedAtUtc = new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAtUtc = new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc),
                             CreatedBy = "HedgeSystem",
                             DomainName = "yahoo.com",
                             IsAllowed = false,
@@ -167,7 +167,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("6e3d4962-dcb0-42bc-9c58-7f6209d4a871"),
-                            CreatedAtUtc = new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAtUtc = new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc),
                             CreatedBy = "HedgeSystem",
                             DomainName = "hotmail.com",
                             IsAllowed = false,
@@ -177,7 +177,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("6e3d4978-dcb0-42ea-9c48-7f6521d4a871"),
-                            CreatedAtUtc = new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAtUtc = new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc),
                             CreatedBy = "HedgeSystem",
                             DomainName = "outlook.com",
                             IsAllowed = false,
@@ -187,7 +187,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("6e3d4978-dcb0-42ea-9c48-7f6209e5b871"),
-                            CreatedAtUtc = new DateTime(2026, 2, 9, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAtUtc = new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc),
                             CreatedBy = "HedgeSystem",
                             DomainName = "greatmoh007@gmail.com",
                             IsAllowed = true,
@@ -231,6 +231,9 @@ namespace Infrastructure.Migrations
                     b.Property<Guid>("MaterialId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<decimal>("PremiumFee")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
@@ -250,6 +253,10 @@ namespace Infrastructure.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
+                    b.Property<decimal>("TotalValueBaseCurrency")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<DateTime?>("UpdatedAtUtc")
                         .HasColumnType("datetime2");
 
@@ -258,6 +265,8 @@ namespace Infrastructure.Migrations
                     b.HasIndex("CurrencyId");
 
                     b.HasIndex("MaterialId");
+
+                    b.HasIndex("OrganizationId");
 
                     b.HasIndex("ProjectId");
 
@@ -288,6 +297,9 @@ namespace Infrastructure.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -358,6 +370,10 @@ namespace Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("BaseCurrencyCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("BusinessName")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -397,6 +413,19 @@ namespace Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Organizations");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("c8f2e6ab-9f34-4b97-8b7c-1a5e86d78e42"),
+                            BaseCurrencyCode = "NGN",
+                            BusinessName = "Build Hedge",
+                            CreatedAtUtc = new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedBy = "Hedge_System",
+                            IsActive = true,
+                            IsDeleted = false,
+                            SubscriptionPlan = 1
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.Project", b =>
@@ -491,7 +520,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("a45c9e02-1f0b-4e57-b3d8-9b77b4a302be"),
-                            CreatedAtUtc = new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAtUtc = new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc),
                             CreatedBy = "HedgeSystem",
                             Description = "Corporate executive with full financial approval authority.",
                             IsDeleted = false,
@@ -500,7 +529,7 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("6e3d4978-dcb0-42ea-9c48-7f6209d4a871"),
-                            CreatedAtUtc = new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAtUtc = new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc),
                             CreatedBy = "HedgeSystem",
                             Description = "Project manager/Contractor who can request price locks.",
                             IsDeleted = false,
@@ -509,11 +538,20 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("6e3d4978-dcb0-42ea-9c48-7f6498d4a871"),
-                            CreatedAtUtc = new DateTime(2026, 2, 3, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAtUtc = new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc),
                             CreatedBy = "HedgeSystem",
                             Description = "Stakeholder who can only view risk reports.",
                             IsDeleted = false,
                             Name = "Hedge_Viewer"
+                        },
+                        new
+                        {
+                            Id = new Guid("d2719e67-52f4-4f9c-bdb2-123456789abc"),
+                            CreatedAtUtc = new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedBy = "Hedge_System",
+                            Description = "Sees total revenue, manages global fees, and views all Orgs, Edit App settings.",
+                            IsDeleted = false,
+                            Name = "Hedge_Owner"
                         });
                 });
 
@@ -578,6 +616,21 @@ namespace Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Users");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("c8f2e5ab-9f34-4b97-8b7c-1a5e86c77e42"),
+                            CreatedAtUtc = new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedBy = "Hedge_System",
+                            Email = "controller@hedge.com",
+                            FirstName = "Hedge",
+                            IsDeleted = false,
+                            IsVerified = true,
+                            LastName = "Controller",
+                            PasswordHash = "AQAAAAEAACcQAAAAEP2pYoh7N/0gJ7DyDXZp2oc62m9yeip7DrFBKr5u43ZlnJVvciJFghhjmow0DkG2Zg==",
+                            PhoneNumber = "+2349117690426"
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.UserOrganizationMembership", b =>
@@ -623,6 +676,19 @@ namespace Infrastructure.Migrations
                     b.HasIndex("OrganizationId");
 
                     b.ToTable("Memberships");
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = new Guid("c8f2e5ab-9f34-4b97-8b7c-1a5e86c77e42"),
+                            OrganizationId = new Guid("c8f2e6ab-9f34-4b97-8b7c-1a5e86d78e42"),
+                            CreatedAtUtc = new DateTime(2026, 2, 20, 16, 11, 46, 394, DateTimeKind.Utc).AddTicks(7218),
+                            CreatedBy = "Hedge_System",
+                            Id = new Guid("7ad9b1e1-4c23-46a2-b8e4-219ab417f71f"),
+                            IsDeleted = false,
+                            JoinedAtUtc = new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc),
+                            RoleInOrganization = "Hedge_Owner"
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.UserRole", b =>
@@ -680,6 +746,12 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Domain.Entities.Organization", "Organization")
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Domain.Entities.Project", "Project")
                         .WithMany("HedgeContracts")
                         .HasForeignKey("ProjectId")
@@ -689,6 +761,8 @@ namespace Infrastructure.Migrations
                     b.Navigation("Currency");
 
                     b.Navigation("Material");
+
+                    b.Navigation("Organization");
 
                     b.Navigation("Project");
                 });
@@ -709,7 +783,7 @@ namespace Infrastructure.Migrations
                     b.HasOne("Domain.Entities.Organization", "Organization")
                         .WithMany("Projects")
                         .HasForeignKey("OrganizationId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Organization");

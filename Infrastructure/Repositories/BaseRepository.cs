@@ -18,6 +18,12 @@ namespace Infrastructure.Repositories
             return entity;
         }
 
+        public async Task<List<T>> Add<T>(List<T> entities) where T : BaseEntity
+        {
+            await _context.AddRangeAsync(entities);
+            return entities;
+        }
+
         public async Task<bool> Any<T>(Expression<Func<T, bool>> expression) where T : BaseEntity
         {
             return await _context.Set<T>().AnyAsync(expression);

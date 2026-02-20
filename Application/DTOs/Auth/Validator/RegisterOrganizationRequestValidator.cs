@@ -51,6 +51,9 @@ namespace Application.DTOs.Auth.Validator
             RuleFor(x => x.AdminConfirmPassword)
                 .NotEmpty().WithMessage("Confirm password is required.")
                 .Equal(x => x.AdminPassword).WithMessage("Confirm password must match the password.");
+
+            RuleFor(x => x.CurrencyId)
+                .NotEmpty().WithMessage("Currency is required");
         }
     }
 }

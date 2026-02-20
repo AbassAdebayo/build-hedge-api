@@ -10,6 +10,7 @@ namespace Application.Interfaces.Repositories
     public interface IBaseRepository
     {
         Task<T> Add<T>(T entity) where T : BaseEntity;
+        Task<List<T>> Add<T>(List<T> entities) where T : BaseEntity;
         Task<T> Update<T>(T entity) where T : BaseEntity;
         void Delete<T>(T entity) where T : BaseEntity;
         Task<bool> Any<T>(Expression<Func<T, bool>> expression) where T : BaseEntity;

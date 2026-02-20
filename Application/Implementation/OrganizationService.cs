@@ -20,7 +20,8 @@ namespace Application.Implementation
     public class OrganizationService(IUserRepository userRepository, ILogger<OrganizationService> logger,
         UserManager<User> userManager, IIdentityService identityService, IOrganizationRepository organizationRepository,
         IUserOrganizationMembershipRepository membershipRepository, IRoleRepository roleRepository,
-        IMailService mailService, IUnitOfWork unitOfWork) : IOrganizationService
+        IMailService mailService,
+        ICurrencyRepository currencyRepository, IUnitOfWork unitOfWork) : IOrganizationService
     {
         private readonly IUserRepository _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         private readonly ILogger<OrganizationService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -31,6 +32,7 @@ namespace Application.Implementation
         private readonly IUserOrganizationMembershipRepository _membershipRepository = membershipRepository ?? throw new ArgumentNullException(nameof(membershipRepository));
         private readonly IOrganizationRepository _organizationRepository = organizationRepository ?? throw new ArgumentNullException(nameof(organizationRepository));
         private readonly IMailService _mailService = mailService ?? throw new ArgumentNullException(nameof(mailService));
+        private readonly ICurrencyRepository _currencyRepository = currencyRepository ?? throw new ArgumentNullException(nameof(currencyRepository));
 
         public async Task<AuthResponse> AddExistingAdminToOrganizationAsync(Guid userId, AddOrganizationToExistingAdminRequest request)
         {
@@ -41,6 +43,10 @@ namespace Application.Implementation
             var existingOrg = await _organizationRepository.Any<Organization>(org => org.BusinessName == request.BusinessName);
             if (existingOrg)
                 return new AuthResponse("This organization is already registered on BuildHedge.", false);
+
+            var currency = await _currencyRepository.Get<Currency>(c => c.Id == request.CurrencyId);
+            if (currency is null)
+                return new AuthResponse("Currency doesn't exist", false);
 
             // Using the execution strategy to handle potential transient failures during the transaction
             var strategy = _unitOfWork.CreateExecutionStrategy();
@@ -58,7 +64,8 @@ namespace Application.Implementation
                         TaxId = request.TaxId,
                         IsActive = false,
                         CreatedAtUtc = DateTime.UtcNow,
-                        CreatedBy = existingUserAdmin.FirstName
+                        CreatedBy = existingUserAdmin.FirstName,
+                        BaseCurrencyCode = currency.Code,
                     };
                     var addOrg = await _organizationRepository.Add(newOrganization);
                     if (addOrg is null)
@@ -124,6 +131,10 @@ namespace Application.Implementation
 
             }
 
+            var currency = await _currencyRepository.Get<Currency>(c => c.Id == request.CurrencyId);
+            if (currency is null)
+                return new AuthResponse("Currency doesn't exist", false);
+
             var strategy = _unitOfWork.CreateExecutionStrategy();
 
             AuthResponse response = await strategy.ExecuteAsync(async () =>
@@ -162,6 +173,7 @@ namespace Application.Implementation
                         BusinessName = request.BusinessName,
                         SubscriptionPlan = ParseSubscriptionPlan(request.SubscriptionPlan),
                         TaxId = request.TaxId,
+                        BaseCurrencyCode = currency.Code,
                         IsActive = false,
                         CreatedAtUtc = DateTime.UtcNow,
                         CreatedBy = creator

@@ -89,7 +89,6 @@ namespace Api.Controllers
 
             if(!user.IsVerified) return BadRequest(new BaseResponse("Email not verified. Please verify your email before logging in.", false));
 
-
             var memberships = await _membershipService.GetUserOrganizationMembershipsAsync(user.Id);
 
             if(!memberships.Data.Any())

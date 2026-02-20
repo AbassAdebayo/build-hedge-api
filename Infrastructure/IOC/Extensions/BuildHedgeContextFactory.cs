@@ -27,7 +27,7 @@ namespace Infrastructure.IOC.Extensions
     // Dummy ITenantProvider implementation for design-time usage
     internal class DummyTenantProvider : ITenantProvider
     {
-        public string GetTenantAdminName()
+        public string GetTenantUserName()
         {
             return string.Empty;
         }
