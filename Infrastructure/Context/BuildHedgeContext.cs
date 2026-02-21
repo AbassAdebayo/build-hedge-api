@@ -250,5 +250,6 @@ namespace Infrastructure.Context
         DbSet<UserRole> UserRoles => Set<UserRole>();
         DbSet<DomainRule> DomainRules => Set<DomainRule>();
         DbSet<Currency> Currencies => Set<Currency>();
+        DbSet<GlobalSettings> GlobalSettings => Set<GlobalSettings>();
     }
 }

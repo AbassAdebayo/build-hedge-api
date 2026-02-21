@@ -1,0 +1,87 @@
+﻿using Application.DTOs;
+using Application.DTOs.GlobalSettings;
+using Application.Interfaces.Repositories;
+using Application.Interfaces.Services;
+using Domain.Contracts.Enum;
+using Domain.Entities;
+using Microsoft.Extensions.Configuration;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace Application.Implementation
+{
+    public class GlobalConfigurationService(IGlobalConfigurationRepository globalConfigurationRepository,
+        IUnitOfWork unitOfWork, IConfiguration config) : IGlobalConfigurationService
+    {
+        private readonly IGlobalConfigurationRepository _globalConfiguration = globalConfigurationRepository ?? throw new ArgumentNullException(nameof(globalConfigurationRepository));
+        private readonly IUnitOfWork _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+        private readonly IConfiguration _config = config ?? throw new ArgumentNullException(nameof(config));
+
+        public async Task<decimal> GetBaseRateAsync(SubscriptionPlan plan)
+        {
+            string key = $"{plan}_BaseRate";
+            var settings = await _globalConfiguration.Get<GlobalSettings>(g => g.Key == key);
+
+            if (settings is not null)
+                return decimal.Parse(settings.Value);
+
+            return _config.GetValue<decimal>("HedgeSettings:BasePremiumRate");
+
+        }
+
+        public async Task<int> GetHedgeQuotaAsync(SubscriptionPlan plan)
+        {
+            string key = $"{plan}_MaxHedgeQuota";
+            var settings = await _globalConfiguration.Get<GlobalSettings>(g => g.Key == key);
+
+            return settings != null ? int.Parse(settings.Value) : 10;
+
+
+        }
+
+        public async Task<decimal> GetMinimumFeeAsync()
+        {
+            string key = "MinimumFee";
+            var settings = await _globalConfiguration.Get<GlobalSettings>(g => g.Key == key);
+
+            if (settings is not null)
+                return decimal.Parse(settings.Value);
+
+            return _config.GetValue<decimal>("HedgeSettings:MinimumFee");
+        }
+
+        public async Task<decimal> GetMonthlyRiskFactorAsync()
+        {
+            string key = "MonthlyRiskFactor";
+            var settings = await _globalConfiguration.Get<GlobalSettings>(g => g.Key == key);
+
+            if (settings is not null)
+                return decimal.Parse(settings.Value);
+
+            return _config.GetValue<decimal>("HedgeSettings:MonthlyRiskFactor");
+        }
+
+        public async Task<BaseResponse<bool>> UpdateSettingAsync(UpdateGlobalSettingsRequestModel request)
+        {
+            var settings = await _globalConfiguration.Get<GlobalSettings>(g => g.Key == request.Key);
+            if(settings is null)
+               await _globalConfiguration.Add<GlobalSettings>(new GlobalSettings
+               {
+                   Key = request.Key,
+                   Value = request.NewValue,
+                   CreatedAtUtc = DateTime.UtcNow
+
+               });
+            else
+            {
+               settings.Value = request.NewValue;
+               settings.UpdatedAtUtc = DateTime.UtcNow;
+            }
+
+            return await _unitOfWork.SaveChangesAsync() > 0
+            ? new BaseResponse<bool>("Setting updated successfully", true, true)
+            : new BaseResponse<bool>("No changes made", false, false);
+        }
+    }
+}

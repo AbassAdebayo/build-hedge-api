@@ -12,5 +12,19 @@ namespace Application.DTOs.HedgeContract
          DateTime ExpiryDate,
          decimal TotalValueBaseCurrency
       );
-    
+
+    public record PlatformSummaryResponse(
+        decimal TotalPlatformRevenue,
+        decimal TotalExposure,
+        int TotalActiveContracts,
+        List<OrganizationRevenueDetails> OrganizationBreakdown
+    );
+     public record OrganizationRevenueDetails(
+        string OrganizationName,
+        decimal TotalFeesPaid,
+        int ContractCount
+     );
+
+
+
 }

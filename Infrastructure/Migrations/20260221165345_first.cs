@@ -55,6 +55,26 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "GlobalSettings",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Key = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Value = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastUpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_GlobalSettings", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Materials",
                 columns: table => new
                 {
@@ -357,7 +377,7 @@ namespace Infrastructure.Migrations
             migrationBuilder.InsertData(
                 table: "Memberships",
                 columns: new[] { "OrganizationId", "UserId", "CreatedAtUtc", "CreatedBy", "Id", "IsDeleted", "JoinedAtUtc", "LastUpdatedBy", "RoleInOrganization", "UpdatedAtUtc" },
-                values: new object[] { new Guid("c8f2e6ab-9f34-4b97-8b7c-1a5e86d78e42"), new Guid("c8f2e5ab-9f34-4b97-8b7c-1a5e86c77e42"), new DateTime(2026, 2, 20, 16, 11, 46, 394, DateTimeKind.Utc).AddTicks(7218), "Hedge_System", new Guid("7ad9b1e1-4c23-46a2-b8e4-219ab417f71f"), false, new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc), null, "Hedge_Owner", null });
+                values: new object[] { new Guid("c8f2e6ab-9f34-4b97-8b7c-1a5e86d78e42"), new Guid("c8f2e5ab-9f34-4b97-8b7c-1a5e86c77e42"), new DateTime(2026, 2, 21, 16, 53, 43, 759, DateTimeKind.Utc).AddTicks(7603), "Hedge_System", new Guid("7ad9b1e1-4c23-46a2-b8e4-219ab417f71f"), false, new DateTime(2026, 2, 20, 0, 0, 0, 0, DateTimeKind.Utc), null, "Hedge_Owner", null });
 
             migrationBuilder.CreateIndex(
                 name: "IX_HedgeContracts_CurrencyId",
@@ -422,6 +442,9 @@ namespace Infrastructure.Migrations
         {
             migrationBuilder.DropTable(
                 name: "DomainRules");
+
+            migrationBuilder.DropTable(
+                name: "GlobalSettings");
 
             migrationBuilder.DropTable(
                 name: "HedgeContracts");
