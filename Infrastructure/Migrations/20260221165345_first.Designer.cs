@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(BuildHedgeContext))]
-    [Migration("20260220161148_first")]
+    [Migration("20260221165345_first")]
     partial class first
     {
         /// <inheritdoc />
@@ -197,6 +197,48 @@ namespace Infrastructure.Migrations
                             IsDeleted = false,
                             Note = "Developer testing bypass"
                         });
+                });
+
+            modelBuilder.Entity("Domain.Entities.GlobalSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LastUpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("GlobalSettings");
                 });
 
             modelBuilder.Entity("Domain.Entities.HedgeContract", b =>
@@ -685,7 +727,7 @@ namespace Infrastructure.Migrations
                         {
                             UserId = new Guid("c8f2e5ab-9f34-4b97-8b7c-1a5e86c77e42"),
                             OrganizationId = new Guid("c8f2e6ab-9f34-4b97-8b7c-1a5e86d78e42"),
-                            CreatedAtUtc = new DateTime(2026, 2, 20, 16, 11, 46, 394, DateTimeKind.Utc).AddTicks(7218),
+                            CreatedAtUtc = new DateTime(2026, 2, 21, 16, 53, 43, 759, DateTimeKind.Utc).AddTicks(7603),
                             CreatedBy = "Hedge_System",
                             Id = new Guid("7ad9b1e1-4c23-46a2-b8e4-219ab417f71f"),
                             IsDeleted = false,

@@ -40,6 +40,8 @@ namespace Infrastructure.IOC.Extensions
                 .AddScoped<ICurrencyService, CurrencyService>()
                 .AddScoped<IMaterialService, MaterialService>()
                 .AddScoped<IHedgeContractService, HedgeContractService>()
+                .AddScoped<IPlatformRevenueService, PlatformRevenueService>()
+                .AddScoped<IGlobalConfigurationService, GlobalConfigurationService>()
                 .AddScoped<IMailSender, MailSender>()
                 .AddScoped<IMailService, MailService>()
                 .AddScoped<IRazorEngine, RazorEngine>();
@@ -58,6 +60,7 @@ namespace Infrastructure.IOC.Extensions
                 .AddScoped<ICurrencyRepository, CurrencyRepository>()
                 .AddScoped<IMaterialRepository, MaterialRepository>()
                 .AddScoped<IHedgeContractRepository, HedgeContractRepository>()
+                .AddScoped<IGlobalConfigurationRepository, GlobalConfigurationRepository>()
                 .AddScoped<IUserOrganizationMembershipRepository, UserOrganizationMembershipRepository>();
 
 

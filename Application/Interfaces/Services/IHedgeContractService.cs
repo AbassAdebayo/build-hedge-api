@@ -1,5 +1,6 @@
 ﻿using Application.DTOs;
 using Application.DTOs.HedgeContract;
+using Domain.Contracts.Enum;
 using System;
 using System.Collections.Generic;
 using System.Text;
