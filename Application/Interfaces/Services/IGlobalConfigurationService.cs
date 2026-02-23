@@ -15,5 +15,6 @@ namespace Application.Interfaces.Services
         public Task<int> GetHedgeQuotaAsync(SubscriptionPlan plan);
         public Task<decimal> GetMonthlyRiskFactorAsync();
         public Task<decimal> GetMinimumFeeAsync();
+        public Task<string> GetSystemBaseCurrency();
     }
 }

@@ -62,6 +62,17 @@ namespace Application.Implementation
             return _config.GetValue<decimal>("HedgeSettings:MonthlyRiskFactor");
         }
 
+        public async Task<string> GetSystemBaseCurrency()
+        {
+            
+            var baseCurrency = await _globalConfiguration.Get<GlobalSettings>(g => g.Key == "System_Base_Currency");
+
+            if (baseCurrency is null)
+                throw new NullReferenceException("No base currency configured in the system.");
+
+            return baseCurrency!.Value;
+        }
+
         public async Task<BaseResponse<bool>> UpdateSettingAsync(UpdateGlobalSettingsRequestModel request)
         {
             var settings = await _globalConfiguration.Get<GlobalSettings>(g => g.Key == request.Key);

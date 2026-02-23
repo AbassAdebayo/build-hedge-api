@@ -17,7 +17,8 @@ namespace Application.DTOs.HedgeContract
         decimal TotalPlatformRevenue,
         decimal TotalExposure,
         int TotalActiveContracts,
-        List<OrganizationRevenueDetails> OrganizationBreakdown
+        List<OrganizationRevenueDetails> OrganizationBreakdown,
+        string CurrencyCode
     );
      public record OrganizationRevenueDetails(
         string OrganizationName,

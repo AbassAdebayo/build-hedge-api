@@ -8,10 +8,12 @@ namespace Application.Interfaces.Repositories
 {
     public interface IHedgeContractRepository : IBaseRepository
     {
-        Task<decimal> GetTotalPremiumRevenueAsync(bool global);
+        //Task<decimal> GetTotalPremiumRevenueAsync(bool global);
         Task<List<OrganizationRevenueDetails>> GetRevenuePerOrganization();
 
         Task<int> GetMonthlyHedgeCount(Guid organizationId);
+
+        Task<IEnumerable<HedgeContract>> GetAllGlobalContractsAsync();
 
     }
 }

@@ -76,6 +76,9 @@ namespace Infrastructure.Context
             modelBuilder.Entity<HedgeContract>()
                 .HasQueryFilter(h => h.OrganizationId == _tenantId);
 
+            modelBuilder.Entity<Material>()
+                .HasQueryFilter(m => m.OrganizationId == _tenantId);
+
             // Map Material Metadata to JSONB for AI flexibility
             modelBuilder.Entity<Material>()
                 .Property(m => m.MetadataJson)
