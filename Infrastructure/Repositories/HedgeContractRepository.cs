@@ -12,15 +12,15 @@ namespace Infrastructure.Repositories
     public class HedgeContractRepository(BuildHedgeContext context) : BaseRepository(context), IHedgeContractRepository
     {
         private readonly BuildHedgeContext _context = context ?? throw new ArgumentNullException(nameof(context));
-        public async Task<decimal> GetTotalPremiumRevenueAsync(bool global)
-        {
+        //public async Task<decimal> GetTotalPremiumRevenueAsync(bool global)
+        //{
           
-            var query = _context.Set<HedgeContract>().AsQueryable();
+        //    var query = _context.Set<HedgeContract>().AsQueryable();
 
-            if(global) query = query.IgnoreQueryFilters();
+        //    if(global) query = query.IgnoreQueryFilters();
 
-            return query.Sum(hc => hc.PremiumFee);
-        }
+        //    return query.Sum(hc => hc.PremiumFee);
+        //}
         public async Task<List<OrganizationRevenueDetails>> GetRevenuePerOrganization()
         {
             
@@ -48,6 +48,14 @@ namespace Infrastructure.Repositories
             return _context.Set<HedgeContract>()
                 .Where(hc => hc.OrganizationId == organizationId && hc.CreatedAtUtc >= firstDayOfMonth)
                 .CountAsync();
+        }
+
+        public async Task<IEnumerable<HedgeContract>> GetAllGlobalContractsAsync()
+        {
+            return await _context.Set<HedgeContract>()
+                .IgnoreQueryFilters()
+                .Include(h => h.Organization)
+                .ToListAsync();
         }
     }
 }

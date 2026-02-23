@@ -19,7 +19,7 @@ namespace Api.Controllers
         private readonly IPlatformRevenueService _platformRevenueService = platformRevenueService ?? throw new ArgumentNullException(nameof(platformRevenueService));
 
 
-        [Authorize(Roles = "Hedge_Admin, Hedge_Editor")]
+        [Authorize(Roles = "Hedge_Owner")]
         [HttpPost("settings")]
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(BaseResponse))]
         public async Task<IActionResult> UpdateSettings([FromBody] UpdateGlobalSettingsRequestModel request)
@@ -28,7 +28,7 @@ namespace Api.Controllers
             return updateSettings.Status ? Ok(updateSettings) : BadRequest(updateSettings);
         }
 
-        [Authorize(Roles = "Hedge_Admin, Hedge_Editor")]
+        [Authorize(Roles = "Hedge_Owner")]
         [HttpGet("dashboard")]
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(BaseResponse))]
         public async Task<IActionResult> Dashboard()
