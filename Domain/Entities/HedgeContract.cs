@@ -25,6 +25,8 @@ namespace Domain.Entities
         public decimal PremiumFee { get; set; }
         public DateTime ExpiryDate { get; set; }
         public DateTime? NoticeSentAt { get; set; }
+        public DateTime? IsSevenDayNoticeSent { get; set; }
+        public DateTime? IsFinalNoticeSent { get; set; }
         public ContractStatus Status { get; set; }
         public decimal TotalValueBaseCurrency { get; set; }
     }

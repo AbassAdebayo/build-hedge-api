@@ -26,8 +26,6 @@ namespace Infrastructure.HedgeBackgroundWorker
             //    await Task.Delay(_checkInterval, stoppingToken);
             //}
 
-            
-
             await Task.Yield();
 
             _logger.LogInformation("BuildHedge Lifecycle Worker started at: {time}", DateTimeOffset.Now);
@@ -69,14 +67,13 @@ namespace Infrastructure.HedgeBackgroundWorker
                 
                 var today = DateTime.UtcNow.Date;
                 
-
                 // SCENARIO 1: (Already Expired)
                 var expired = await hedgeContext.GetAll<HedgeContract>(
                     hc => hc.Status == Domain.Contracts.Enum.ContractStatus.Active &&
                     hc.ExpiryDate < today &&
                     !hc.NoticeSentAt.HasValue,
                     ignoreFilters: true
-                    );
+                 );
 
 
                 foreach (var hedge in expired)
@@ -119,7 +116,7 @@ namespace Infrastructure.HedgeBackgroundWorker
                     h.Status == ContractStatus.Active &&
                     h.ExpiryDate.Date >= startOfTheFinalDay &&
                     h.ExpiryDate <= endOfTheFinalDay &&
-                   !h.NoticeSentAt.HasValue,
+                   !h.IsSevenDayNoticeSent.HasValue,
                    ignoreFilters: true);
 
                 foreach (var hedge in sevenDayWarnings)
@@ -140,7 +137,7 @@ namespace Infrastructure.HedgeBackgroundWorker
 
                         if (sent)
                         {
-                            hedge.NoticeSentAt = DateTime.UtcNow;
+                            hedge.IsSevenDayNoticeSent = DateTime.UtcNow;
                          await hedgeContext.Update<HedgeContract>(hedge);
                         }
 
@@ -157,7 +154,7 @@ namespace Infrastructure.HedgeBackgroundWorker
                 var lastCall = await hedgeContext.GetAll<HedgeContract>(h =>
                     h.Status == ContractStatus.Active &&
                     h.ExpiryDate.Date == finalDate &&
-                    !h.NoticeSentAt.HasValue,
+                    !h.IsFinalNoticeSent.HasValue,
                     ignoreFilters: true
                  );
 
@@ -177,7 +174,7 @@ namespace Infrastructure.HedgeBackgroundWorker
                          );
                         if (sent)
                         {
-                            hedge.NoticeSentAt = DateTime.UtcNow;
+                            hedge.IsFinalNoticeSent = DateTime.UtcNow;
                         await hedgeContext.Update<HedgeContract>(hedge);
                     }
                     }
