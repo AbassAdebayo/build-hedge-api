@@ -99,6 +99,7 @@ namespace Infrastructure.HedgeBackgroundWorker
                     if (sent)
                     {
                         hedge.NoticeSentAt = DateTime.UtcNow;
+                        await hedgeContext.Update<HedgeContract>(hedge);
                     }
                         
                 }
@@ -110,7 +111,7 @@ namespace Infrastructure.HedgeBackgroundWorker
                 }
 
                 // SCENARIO 2: The Warning(Expiring in 7 days)
-                var warningDate = today.AddDays(7);
+                var warningDate = today.AddDays(2);
                 var startOfTheFinalDay = warningDate;
                 var endOfTheFinalDay = warningDate.AddDays(1).AddTicks(-1);
 
@@ -140,6 +141,7 @@ namespace Infrastructure.HedgeBackgroundWorker
                         if (sent)
                         {
                             hedge.NoticeSentAt = DateTime.UtcNow;
+                         await hedgeContext.Update<HedgeContract>(hedge);
                         }
 
                     }
@@ -176,15 +178,16 @@ namespace Infrastructure.HedgeBackgroundWorker
                         if (sent)
                         {
                             hedge.NoticeSentAt = DateTime.UtcNow;
-                        }
+                        await hedgeContext.Update<HedgeContract>(hedge);
+                    }
                     }
                     else
                     {
                         _logger.LogWarning($"Could not send notification. User: {user?.Id}, Material: {material?.Id}");
                     }
                 }
-
-                await unitOfWork.SaveChangesAsync();
+                
+            await unitOfWork.SaveChangesAsync();
             
 
         }
