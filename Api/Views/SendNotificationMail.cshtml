@@ -1,0 +1,40 @@
+﻿@model Infrastructure.Messaging.Models.SendNotification
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<body style="margin:0; background:#f5f7fb; font-family: Arial, sans-serif;">
+    <table role="presentation" width="100%" style="background:#f5f7fb; padding:30px 12px;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="600" style="background:#ffffff; border-radius:16px; overflow:hidden;">
+                    <tr>
+                        <td style="padding:28px; background:linear-gradient(135deg,#0f172a,#1d4ed8); text-align:center;">
+                            <img src="cid:build_hedge_logo.png" style="height:60px;" />
+                            <div style="font-size:20px; font-weight:700; color:#ffffff;">@Model.Title</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:28px;">
+                            <p>Hi <strong>@Model.Name</strong>, 👋</p>
+                            <p style="color:#374151; line-height:1.6;">@Model.Message</p>
+
+                            <table role="presentation" style="margin:20px auto;">
+                                <tr>
+                                    <td align="center">
+                                        <a href="https://your-app-url.com/dashboard"
+                                           style="background:#2563eb; color:#ffffff; padding:14px 22px; border-radius:12px; font-weight:700; text-decoration:none;">
+                                            @Model.ActionText
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

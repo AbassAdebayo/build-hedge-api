@@ -97,6 +97,33 @@ namespace Infrastructure.MailingService
             }
         }
 
+        public async Task<bool> SendNotificationMail(string email, string name, string title, string body)
+        {
+            try
+            {
+                var model = new SendNotification()
+                {
+                    Name = name,
+                    Email = email,
+                    Title = title,
+                    Message = body
+
+                };
+                var mailBody = await _razorEngine.ParseAsync("SendNotificationMail", model);
+                return await _mailSender.Send(_emailConfiguration.FromEmail, _emailConfiguration.FromName, email, name, title, mailBody);
+            }
+            catch (RazorEngineException ex)
+            {
+                _logger.LogError(ex.Message);
+                return false;
+            }
+            catch (MailSenderException ex)
+            {
+                _logger.LogError(ex.Message);
+                return false;
+            }
+        }
+
         public async Task<bool> SendVerificationMail(string email, string name, string token)
         {
             try

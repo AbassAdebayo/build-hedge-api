@@ -4,6 +4,7 @@ using Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(BuildHedgeContext))]
-    partial class BuildHedgeContextModelSnapshot : ModelSnapshot
+    [Migration("20260223192834_HedgeEntityUpdated")]
+    partial class HedgeEntityUpdated
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -275,9 +278,6 @@ namespace Infrastructure.Migrations
 
                     b.Property<Guid>("MaterialId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("NoticeSentAt")
-                        .HasColumnType("datetime2");
 
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uniqueidentifier");
@@ -730,7 +730,7 @@ namespace Infrastructure.Migrations
                         {
                             UserId = new Guid("c8f2e5ab-9f34-4b97-8b7c-1a5e86c77e42"),
                             OrganizationId = new Guid("c8f2e6ab-9f34-4b97-8b7c-1a5e86d78e42"),
-                            CreatedAtUtc = new DateTime(2026, 2, 24, 11, 18, 9, 92, DateTimeKind.Utc).AddTicks(7300),
+                            CreatedAtUtc = new DateTime(2026, 2, 23, 19, 28, 32, 519, DateTimeKind.Utc).AddTicks(1119),
                             CreatedBy = "Hedge_System",
                             Id = new Guid("7ad9b1e1-4c23-46a2-b8e4-219ab417f71f"),
                             IsDeleted = false,

@@ -15,5 +15,6 @@ namespace Domain.Configuration
 #pragma warning restore CS8618
         public string VerificationSubject { get; set; } = "Verification";
         public string InvitationSubject { get; set; } = "Invitation";
+        //public string NotificationSubject { get; set; } = "Notification";
     }
 }

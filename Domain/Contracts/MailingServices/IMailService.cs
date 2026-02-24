@@ -13,5 +13,7 @@ namespace Domain.Contracts.MailingServices
         public Task<bool> SendVerificationMail(string email, string name, string token);
 
         public Task<bool> SendInvitationMail(string email, string name, string token, string role);
+        public Task<bool> SendNotificationMail(string email, string name, string title, string body);
+
     }
 }

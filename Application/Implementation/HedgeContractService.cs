@@ -3,6 +3,7 @@ using Application.DTOs.HedgeContract;
 using Application.ExchangeRate;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
+using Application.Tenant;
 using Domain.Contracts.Enum;
 using Domain.Entities;
 using Microsoft.Extensions.Configuration;
@@ -16,7 +17,7 @@ namespace Application.Implementation
         IOrganizationRepository organizationRepository,
         ICurrencyExchangeService exchangeService, ICurrencyRepository currencyRepository,
         IHedgeContractRepository hedgeContract, IGlobalConfigurationService globalConfigService,
-        IUnitOfWork unitOfWork) : IHedgeContractService
+        IUnitOfWork unitOfWork, ITenantProvider tenantProvider) : IHedgeContractService
     {
         private readonly IProjectRepository _projectRepository = projectRepository ?? throw new ArgumentNullException(nameof(projectRepository));
         private readonly IOrganizationRepository _organizationRepository = organizationRepository ?? throw new ArgumentNullException(nameof(organizationRepository));
@@ -25,7 +26,9 @@ namespace Application.Implementation
         private readonly IHedgeContractRepository _hedgeContract = hedgeContract ?? throw new ArgumentNullException(nameof(hedgeContract));
         private readonly IGlobalConfigurationService _globalConfigService = globalConfigService ?? throw new ArgumentNullException(nameof(globalConfigService));
         private readonly IUnitOfWork _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
-       // private readonly decimal _baseRate = config.GetValue<decimal>("HedgeSettings:BasePremiumRate");
+        private readonly string _tenantUserName = tenantProvider.GetTenantUserName();
+        private readonly Guid _tenantUserId = tenantProvider.GetTenantUserId();
+        // private readonly decimal _baseRate = config.GetValue<decimal>("HedgeSettings:BasePremiumRate");
         //private readonly decimal _monthlyRisk = config.GetValue<decimal>("HedgeSettings:MonthlyRiskFactor");
         //private readonly int _minimumFee = config.GetValue<int>("HedgeSettings:MinimumFee");
 
@@ -119,6 +122,8 @@ namespace Application.Implementation
                         TotalValueBaseCurrency = materialValueBase,
                         Status = Domain.Contracts.Enum.ContractStatus.Active,
                         OrganizationId = organization.Id,
+                        CreatedBy = _tenantUserName,
+                        CreatedByUserId = _tenantUserId,
                     });
                 }
 

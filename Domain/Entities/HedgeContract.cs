@@ -8,6 +8,7 @@ namespace Domain.Entities
 {
     public class HedgeContract : BaseEntity
     {
+        public Guid? CreatedByUserId { get; set; }
         public Guid ProjectId { get; set; }
         public Project Project { get; set; } = null!;
 
@@ -23,7 +24,7 @@ namespace Domain.Entities
         public decimal Quantity { get; set; }
         public decimal PremiumFee { get; set; }
         public DateTime ExpiryDate { get; set; }
-
+        public DateTime? NoticeSentAt { get; set; }
         public ContractStatus Status { get; set; }
         public decimal TotalValueBaseCurrency { get; set; }
     }

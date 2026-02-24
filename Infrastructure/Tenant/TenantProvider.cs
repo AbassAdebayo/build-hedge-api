@@ -23,5 +23,11 @@ namespace Infrastructure.Tenant
             var claim = _httpContextAccessor.HttpContext?.User?.FindFirst("CurrentOrgId")?.Value;
             return Guid.TryParse(claim, out var tenantId) ? tenantId : Guid.Empty;
         }
+
+        public Guid GetTenantUserId()
+        {
+            var claim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return Guid.TryParse(claim, out var tenantUserId) ? tenantUserId : Guid.Empty;
+        }
     }
 }
