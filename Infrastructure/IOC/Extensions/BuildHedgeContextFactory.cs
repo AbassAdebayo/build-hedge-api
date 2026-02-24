@@ -37,5 +37,10 @@ namespace Infrastructure.IOC.Extensions
             // Return a default or fixed tenant id for design-time
             return Guid.Empty;
         }
+
+        public Guid GetTenantUserId()
+        {
+            return Guid.Empty;
+        }
     }
 }

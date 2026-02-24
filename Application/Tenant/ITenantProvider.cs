@@ -8,5 +8,6 @@ namespace Application.Tenant
     {
         Guid GetTenantId();
         string GetTenantUserName();
+        public Guid GetTenantUserId();
     }
 }

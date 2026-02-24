@@ -16,14 +16,26 @@ using System.Text;
 
 namespace Infrastructure.TemplateEngine
 {
-    public class RazorEngine(IRazorViewEngine viewEngine, 
-        ITempDataProvider tempDataProvider, IHttpContextAccessor accessor,
-        ILogger<RazorEngine> logger) : IRazorEngine
+    public class RazorEngine : IRazorEngine
     {
-        private readonly IRazorViewEngine _viewEngine = viewEngine ?? throw new ArgumentNullException(nameof(viewEngine));
-        private readonly ITempDataProvider _tempDataProvider = tempDataProvider ?? throw new ArgumentNullException(nameof(tempDataProvider));
-        private readonly HttpContext _context = accessor.HttpContext ?? throw new ArgumentNullException(nameof(accessor));
-        private readonly ILogger<IRazorEngine> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        private readonly IRazorViewEngine _viewEngine;
+        private readonly ITempDataProvider _tempDataProvider;
+        private readonly IHttpContextAccessor _accessor;
+        private readonly ILogger<RazorEngine> _logger;
+        private readonly IServiceProvider _serviceProvider;
+        public RazorEngine(
+            IRazorViewEngine viewEngine,
+            ITempDataProvider tempDataProvider,
+            IHttpContextAccessor accessor,
+            IServiceProvider serviceProvider, // Add this to constructor
+            ILogger<RazorEngine> logger)
+        {
+            _viewEngine = viewEngine ?? throw new ArgumentNullException(nameof(viewEngine));
+            _tempDataProvider = tempDataProvider ?? throw new ArgumentNullException(nameof(tempDataProvider));
+            _accessor = accessor ?? throw new ArgumentNullException(nameof(accessor));
+            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
         public async Task<string> ParseAsync<TModel>(string viewName, TModel model)
         {
             try
@@ -42,7 +54,8 @@ namespace Infrastructure.TemplateEngine
                     new TempDataDictionary(actionContext.HttpContext, _tempDataProvider),
                     writer,
                     new HtmlHelperOptions())
-                { RouteData = _context.GetRouteData() };
+                //{ RouteData = _context.GetRouteData() };
+                { RouteData = actionContext.RouteData };
 
                 await view.RenderAsync(viewContext);
 
@@ -77,9 +90,18 @@ namespace Infrastructure.TemplateEngine
             throw new InvalidOperationException(errorMessage);
         }
 
+        //private ActionContext GetActionContext()
+        //{
+        //    return new ActionContext(_context, new RouteData(), new ActionDescriptor());
+        //}
         private ActionContext GetActionContext()
         {
-            return new ActionContext(_context, new RouteData(), new ActionDescriptor());
+            var httpContext = _accessor.HttpContext ?? new DefaultHttpContext
+            {
+                RequestServices = _serviceProvider
+            };
+
+            return new ActionContext(httpContext, new RouteData(), new ActionDescriptor());
         }
     }
 }

@@ -5,6 +5,7 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Infrastructure.ExchangeRate;
 using Infrastructure.Extensions;
+using Infrastructure.HedgeBackgroundWorker;
 using Infrastructure.IOC.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -30,6 +31,7 @@ builder.Services.AddHttpClient<ICurrencyExchangeService, CurrencyExchangeService
 
 // Add Email Configurations
 builder.Services.Configure<EmailConfiguration>(builder.Configuration.GetSection("EmailConfiguration"));
+builder.Services.AddHostedService<HedgeLifecycleWorker>();
 
 builder.Services.AddControllers(options =>
 {
