@@ -24,10 +24,12 @@ namespace Domain.Entities
         public decimal Quantity { get; set; }
         public decimal PremiumFee { get; set; }
         public DateTime ExpiryDate { get; set; }
-        public DateTime? NoticeSentAt { get; set; }
+        public DateTime? IsExpiredNoticeSentAt { get; set; }
         public DateTime? IsSevenDayNoticeSent { get; set; }
         public DateTime? IsFinalNoticeSent { get; set; }
         public ContractStatus Status { get; set; }
         public decimal TotalValueBaseCurrency { get; set; }
+        public decimal OverageFee { get; set; } 
+        public decimal TotalTransactionCost => PremiumFee + OverageFee;
     }
 }

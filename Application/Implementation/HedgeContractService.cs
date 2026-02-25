@@ -44,71 +44,58 @@ namespace Application.Implementation
 
             decimal grandTotalPremium = 0;
             decimal grandTotalValue = 0;
+            decimal grandTotalOverage = 0;
             var responseItems = new List<HedgeItemDetail>();
             var hedgesToSave = new List<HedgeContract>();
 
-            int hedgesCount = 0;
+            int maxHedgeAllowed = await _globalConfigService.GetHedgeQuotaAsync(organization.SubscriptionPlan);
+            decimal overageFeeRate = await _globalConfigService.GetOverageFeeAsync(organization.SubscriptionPlan);
+            decimal baseRate = await _globalConfigService.GetBaseRateAsync(organization.SubscriptionPlan);
+            decimal minimumFee = await _globalConfigService.GetMinimumFeeAsync();
+            decimal monthlyRisk = await _globalConfigService.GetMonthlyRiskFactorAsync();
+
+            // Get current count to determine where the "Overage" starts
+            int runningMonthCount = await _hedgeContract.GetMonthlyHedgeCount(organization.Id);
 
             foreach (var item in request.MaterialsToHedge)
             {
-
                 if (item.ExpiryDate > project.EstimatedCompletion)
                     return new BaseResponse<BulkHedgeResponse>(
-                    $"Hedge for material {item.MaterialId} cannot expire after the project ends ({project.EstimatedCompletion:dd-MM-yyyy}).",
-                    false, null!);
+                        $"Hedge for material {item.MaterialId} expires after project ends.", false, null!);
 
                 var currency = await _currencyRepository.Get<Currency>(c => c.Id == item.CurrencyId);
                 var rateResponse = await _exchangeService.GetExchangeRateAsync(currency.Code, organization.BaseCurrencyCode);
-
                 decimal rate = rateResponse.IsSuccess ? rateResponse.Data : 1.0m;
 
-                // Owner's Automatic Calculation
                 decimal materialValue = (item.Quantity * item.LockedPrice) * rate;
+                var monthsOfRisk = (decimal)Math.Max(1, Math.Ceiling((item.ExpiryDate - DateTime.UtcNow).TotalDays / 30));
 
-                // Calculate time-based risk
-                var daysToExpiry = (item.ExpiryDate - DateTime.UtcNow).TotalDays;
-                var monthsOfRisk = (decimal)Math.Max(1, Math.Ceiling(daysToExpiry / 30));
+                // Calculate the Risk Premium (2% + Time Risk)
+                decimal riskPremium = materialValue * (baseRate + (monthsOfRisk * monthlyRisk));
+                riskPremium = riskPremium < minimumFee ? minimumFee : riskPremium;
 
-                decimal baseRate = await _globalConfigService.GetBaseRateAsync(organization.SubscriptionPlan);
-
-                decimal minimumFee = await _globalConfigService.GetMinimumFeeAsync();
-
-                decimal monthlyRisk = await _globalConfigService.GetMonthlyRiskFactorAsync();
-
-                // Formula: Base Rate + (Monthly Risk * Duration)
-                decimal totalPremium = materialValue * (baseRate + (monthsOfRisk * monthlyRisk));
-
-                // Check if total premium meets the minimum fee requirement
-                totalPremium = totalPremium < minimumFee ? minimumFee : totalPremium;
-
-                decimal totalCostWithPremium = materialValue + totalPremium;
-
+                decimal currentItemOverage = 0;
                 if (!isPreview)
                 {
-                    int currentMonthCount = await _hedgeContract.GetMonthlyHedgeCount(organization.Id);
-                    int maxHedgeAllowed = await _globalConfigService.GetHedgeQuotaAsync(organization.SubscriptionPlan);
-
-                    if (currentMonthCount + request.MaterialsToHedge.Count > maxHedgeAllowed)
-                        return new BaseResponse<BulkHedgeResponse>(
-                            $"Hedge limit reached for the current subscription plan. You have {currentMonthCount} hedges this month, and the limit is {maxHedgeAllowed}.",
-                            false, null!);
+                    // If we have already hit our 9,999 (or whatever the limit is), add the fee
+                    if (runningMonthCount >= maxHedgeAllowed)
+                    {
+                        currentItemOverage = overageFeeRate;
+                    }
+                    runningMonthCount++;
                 }
 
+                decimal totalItemPremium = riskPremium + currentItemOverage;
+                decimal totalCostWithPremium = materialValue + totalItemPremium;
 
-                responseItems.Add(new HedgeItemDetail(
-                    item.MaterialId,
-                    totalPremium,
-                    totalCostWithPremium,
-                    rate
-                 ));
+                responseItems.Add(new HedgeItemDetail(item.MaterialId, totalItemPremium, totalCostWithPremium, rate));
 
-                grandTotalPremium += totalPremium;
+                grandTotalPremium += riskPremium;
+                grandTotalOverage += currentItemOverage;
                 grandTotalValue += materialValue;
-
 
                 if (!isPreview)
                 {
-                    var materialValueBase = (item.Quantity * item.LockedPrice) * rate;
                     hedgesToSave.Add(new HedgeContract
                     {
                         ProjectId = project.Id,
@@ -118,33 +105,33 @@ namespace Application.Implementation
                         LockedPrice = item.LockedPrice,
                         ExchangeRateAtLock = rate,
                         ExpiryDate = item.ExpiryDate,
-                        PremiumFee = totalPremium,
-                        TotalValueBaseCurrency = materialValueBase,
+                        PremiumFee = riskPremium,
+                        OverageFee = currentItemOverage,
+                        TotalValueBaseCurrency = materialValue,
                         Status = Domain.Contracts.Enum.ContractStatus.Active,
                         OrganizationId = organization.Id,
                         CreatedBy = _tenantUserName,
                         CreatedByUserId = _tenantUserId,
                     });
                 }
-
-                hedgesCount++;
             }
 
-            var hedgesData = new BulkHedgeResponse(grandTotalValue, grandTotalPremium, responseItems);
+            var hedgesData = new BulkHedgeResponse(grandTotalValue, (grandTotalPremium + grandTotalOverage), responseItems);
 
             if (!isPreview)
             {
-                await _hedgeContract.Add(hedgesToSave);
-                return await _unitOfWork.SaveChangesAsync() > 0 ? new BaseResponse<BulkHedgeResponse>(
-                $"{hedgesCount} hedges saved successfully", true, hedgesData)
-                : new BaseResponse<BulkHedgeResponse>("Hedges couldn't be saved", false, null!);
+                // This is where the tenant "pays" via credit/invoice
+                organization.AccruedFees += (grandTotalPremium + grandTotalOverage);
 
+                await _organizationRepository.Update(organization);
+                await _hedgeContract.Add(hedgesToSave);
+
+                return await _unitOfWork.SaveChangesAsync() > 0
+                    ? new BaseResponse<BulkHedgeResponse>($"{hedgesToSave.Count} hedges saved", true, hedgesData)
+                    : new BaseResponse<BulkHedgeResponse>("Hedges couldn't be saved", false, null!);
             }
 
-            return new BaseResponse<BulkHedgeResponse>(
-                $"{hedgesCount} hedges previewed successfully", true, hedgesData);
-
-
+            return new BaseResponse<BulkHedgeResponse>($"{request.MaterialsToHedge.Count} hedges previewed", true, hedgesData);
         }
 
         public async Task<BaseResponse<IEnumerable<ListOfProjectHedgesResponse>>> GetAllProjectHedges()
