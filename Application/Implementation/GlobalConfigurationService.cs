@@ -62,6 +62,42 @@ namespace Application.Implementation
             return _config.GetValue<decimal>("HedgeSettings:MonthlyRiskFactor");
         }
 
+        public async Task<decimal> GetOverageFeeAsync(SubscriptionPlan plan)
+        {
+            string key = $"{plan}_OverageFee";
+            var settings = await _globalConfiguration.Get<GlobalSettings>(g => g.Key == key);
+
+            if (settings is not null)
+                return decimal.Parse(settings.Value);
+
+            // Fallback defaults if DB is empty
+            return plan switch
+            {
+                SubscriptionPlan.Enterprise => 1.50m,
+                SubscriptionPlan.Standard => 2.50m,
+                _ => 5.00m
+            };
+        }
+
+        // Inside GlobalConfigService.cs
+        public async Task<decimal> GetCreditLimitAsync(SubscriptionPlan plan)
+        {
+            string key = $"{plan}_CreditLimit";
+            var settings = await _globalConfiguration.Get<GlobalSettings>(g => g.Key == key);
+
+            if (settings is not null)
+                return decimal.Parse(settings.Value);
+
+            // Fallback defaults if the database entry doesn't exist yet
+            return plan switch
+            {
+                SubscriptionPlan.Enterprise => 10000.00m,
+                SubscriptionPlan.Standard => 2000.00m,
+                SubscriptionPlan.Basic => 500.00m,
+                _ => 100.00m
+            };
+        }
+
         public async Task<string> GetSystemBaseCurrency()
         {
             

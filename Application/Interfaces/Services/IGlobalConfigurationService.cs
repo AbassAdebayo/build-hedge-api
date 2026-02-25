@@ -16,5 +16,7 @@ namespace Application.Interfaces.Services
         public Task<decimal> GetMonthlyRiskFactorAsync();
         public Task<decimal> GetMinimumFeeAsync();
         public Task<string> GetSystemBaseCurrency();
+        public Task<decimal> GetOverageFeeAsync(SubscriptionPlan plan);
+        public Task<decimal> GetCreditLimitAsync(SubscriptionPlan plan);
     }
 }

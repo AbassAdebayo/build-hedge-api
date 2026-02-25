@@ -7,6 +7,7 @@ using Infrastructure.ExchangeRate;
 using Infrastructure.Extensions;
 using Infrastructure.HedgeBackgroundWorker;
 using Infrastructure.IOC.Extensions;
+using Infrastructure.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -185,6 +186,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseAuthentication();
+app.UseMiddleware<SubscriptionMiddleware>();
 app.UseAuthorization();
 
 app.MapControllers();

@@ -71,7 +71,7 @@ namespace Infrastructure.HedgeBackgroundWorker
                 var expired = await hedgeContext.GetAll<HedgeContract>(
                     hc => hc.Status == Domain.Contracts.Enum.ContractStatus.Active &&
                     hc.ExpiryDate < today &&
-                    !hc.NoticeSentAt.HasValue,
+                    !hc.IsExpiredNoticeSentAt.HasValue,
                     ignoreFilters: true
                  );
 
@@ -95,7 +95,7 @@ namespace Infrastructure.HedgeBackgroundWorker
                        );
                     if (sent)
                     {
-                        hedge.NoticeSentAt = DateTime.UtcNow;
+                        hedge.IsExpiredNoticeSentAt = DateTime.UtcNow;
                         await hedgeContext.Update<HedgeContract>(hedge);
                     }
                         
