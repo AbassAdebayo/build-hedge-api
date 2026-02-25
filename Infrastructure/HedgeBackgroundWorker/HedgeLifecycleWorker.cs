@@ -108,7 +108,7 @@ namespace Infrastructure.HedgeBackgroundWorker
                 }
 
                 // SCENARIO 2: The Warning(Expiring in 7 days)
-                var warningDate = today.AddDays(2);
+                var warningDate = today.AddDays(7);
                 var startOfTheFinalDay = warningDate;
                 var endOfTheFinalDay = warningDate.AddDays(1).AddTicks(-1);
 

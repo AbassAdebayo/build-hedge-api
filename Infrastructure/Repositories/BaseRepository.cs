@@ -66,7 +66,7 @@ namespace Infrastructure.Repositories
                 query = query.IgnoreQueryFilters();
             }
 
-                return await query.Where(expression).AsNoTracking().ToListAsync();
+            return await query.Where(expression).AsNoTracking().ToListAsync();
         }
 
         public Task<T> Get<T>(Expression<Func<T, bool>> expression, bool ignoreFilters = false) where T : BaseEntity
