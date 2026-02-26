@@ -12,12 +12,12 @@ using System.Text;
 
 namespace Infrastructure.Messaging
 {
-    public class MailSender(IConfiguration configuration, IWebHostEnvironment _env, 
+    public class MailSender(IConfiguration configuration, IWebHostEnvironment env, 
         ILogger<MailSender> logger) : IMailSender
     {
         private readonly IConfiguration _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         private readonly ILogger<IMailSender> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        private readonly IWebHostEnvironment _env = _env ?? throw new ArgumentNullException(nameof(_env));
+        private readonly IWebHostEnvironment _env = env ?? throw new ArgumentNullException(nameof(_env));
         public async Task<bool> Send(string from, string fromName, string to, string toName, string subject, string message, IDictionary<string, Stream> attachments = null)
         {
             var smtpApiKey = _configuration["BuildHedgeAPIs:SmtpApiKey"];
