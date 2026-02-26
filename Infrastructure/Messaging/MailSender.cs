@@ -84,6 +84,17 @@ namespace Infrastructure.Messaging
 
         }
 
+        public async Task<bool> SendWithAttachment(string from, string fromName, string to, string toName, string subject, string message, byte[] attachmentContent, string fileName)
+        {
+            var attachments = new Dictionary<string, Stream>
+            {
+                { fileName, new MemoryStream(attachmentContent) }
+            };
+
+            // Call your existing main Send method
+            return await Send(from, fromName, to, toName, subject, message, attachments);
+        }
+
         private static byte[] ReadFully(Stream input)
         {
             using MemoryStream ms = new();

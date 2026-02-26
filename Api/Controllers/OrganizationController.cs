@@ -4,7 +4,7 @@ using Application.DTOs.HedgeContract;
 using Application.DTOs.Material;
 using Application.DTOs.Project;
 using Application.Interfaces.Services;
-using Application.Tenant;
+using Domain.Contracts.Tenant;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

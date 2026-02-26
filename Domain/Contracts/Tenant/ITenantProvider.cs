@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Application.Tenant
+namespace Domain.Contracts.Tenant
 {
     public interface ITenantProvider
     {

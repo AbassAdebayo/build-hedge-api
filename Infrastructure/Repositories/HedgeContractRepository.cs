@@ -57,5 +57,15 @@ namespace Infrastructure.Repositories
                 .Include(h => h.Organization)
                 .ToListAsync();
         }
+
+        public Task<List<HedgeContract>> GetHedgesForBilling(Guid organizationId, int month, int year)
+        {
+            return _context.Set<HedgeContract>()
+                .Where(hc => hc.OrganizationId == organizationId 
+                    && hc.CreatedAtUtc.Month == month 
+                    && hc.CreatedAtUtc.Year == year)
+                .OrderByDescending(hc => hc.CreatedAtUtc)
+                .ToListAsync();
+        }
     }
 }

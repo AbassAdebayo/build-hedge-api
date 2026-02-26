@@ -1,7 +1,7 @@
 ﻿using Application.Interfaces.Identity;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
-using Application.Tenant;
+using Domain.Contracts.Tenant;
 using Domain.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;

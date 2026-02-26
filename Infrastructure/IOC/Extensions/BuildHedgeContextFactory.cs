@@ -1,4 +1,4 @@
-﻿using Application.Tenant;
+﻿using Domain.Contracts.Tenant;
 using Infrastructure.Context;
 using Infrastructure.Tenant;
 using Microsoft.EntityFrameworkCore;

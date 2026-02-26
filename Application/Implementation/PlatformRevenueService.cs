@@ -1,6 +1,6 @@
 ﻿using Application.DTOs;
 using Application.DTOs.HedgeContract;
-using Application.ExchangeRate;
+using Application.Interfaces.ExchangeRate;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using System;
