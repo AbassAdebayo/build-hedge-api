@@ -63,6 +63,7 @@ namespace Application.Implementation
                         SubscriptionPlan = ParseSubscriptionPlan(request.SubscriptionPlan),
                         TaxId = request.TaxId,
                         IsActive = false,
+                        IsInTrial = false,
                         CreatedAtUtc = DateTime.UtcNow,
                         CreatedBy = existingUserAdmin.FirstName,
                         BaseCurrencyCode = currency.Code,

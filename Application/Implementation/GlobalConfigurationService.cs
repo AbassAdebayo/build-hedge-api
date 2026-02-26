@@ -30,13 +30,23 @@ namespace Application.Implementation
 
         }
 
-        public async Task<int> GetHedgeQuotaAsync(SubscriptionPlan plan)
+        public async Task<int> GetHedgeQuotaAsync(SubscriptionPlan plan, DateTime trialExpiry)
         {
+            bool isInTrial = trialExpiry >= DateTime.UtcNow;
+            if(isInTrial) return 10;
+
             string key = $"{plan}_MaxHedgeQuota";
             var settings = await _globalConfiguration.Get<GlobalSettings>(g => g.Key == key);
 
-            return settings != null ? int.Parse(settings.Value) : 10;
+            if (settings is not null) return int.Parse(settings.Value);
 
+            return plan switch
+            {
+                SubscriptionPlan.Enterprise => 9999,
+                SubscriptionPlan.Standard => 500,
+                SubscriptionPlan.Basic => 100,
+                _ => 0
+            };
 
         }
 

@@ -35,7 +35,9 @@ namespace Infrastructure.HedgeBackgroundWorker
                 await SendPaymentReminders();
             }
 
-            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+            await CleanupExpiredTrials();
+
+             await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
         }
 
         private async Task RunBillingCycle()
@@ -59,7 +61,7 @@ namespace Infrastructure.HedgeBackgroundWorker
             foreach (var org in organizations)
             {
                 // APPLY YOUR MIDDLEWARE LOGIC HERE
-                bool isUnderTrial = DateTime.UtcNow <= org.CreatedAtUtc.AddDays(14);
+                bool isUnderTrial = DateTime.UtcNow <= org.TrialExpiryDate.Value;
 
                 if (isUnderTrial && org.AccruedFees == 0) continue;
 
@@ -116,8 +118,9 @@ namespace Infrastructure.HedgeBackgroundWorker
             }
             string message = anyFailure ? $"Monthly billing cycle completed with some failures at {DateTime.UtcNow}"
                 : $"Monthly billing cycle completed successfully at  {DateTime.UtcNow}";
-
             logger.LogError(message);
+
+            await unitOfWork.SaveChangesAsync();
 
 
 
@@ -141,20 +144,80 @@ namespace Infrastructure.HedgeBackgroundWorker
             var threeDaysFromNow = DateTime.UtcNow.AddDays(3);
             var pendingInvoices = await billingRepo.GetAll<BillingStatement>(s => !s.IsPaid && s.DueDate <= threeDaysFromNow);
 
-            bool anyFailure = false;
-
-            foreach (var invoice in pendingInvoices)
+            if(pendingInvoices is not null || pendingInvoices.Any())
             {
-                var org = await orgRepo.Get<Organization>(org => org.Id == invoice.OrganizationId);
+                bool anyFailure = false;
 
-                var daysUntilDue = (invoice.DueDate - DateTime.UtcNow).TotalDays;
-
-                if (daysUntilDue <= 3) // Start reminding 3 days before it's due
+                foreach (var invoice in pendingInvoices)
                 {
-                    // 3. RE-GENERATE THE BREAKDOWN (The "Financial Aid" part)
-                    // We need the hedges that were part of this specific statement
-                    var hedges = await hedgeRepo.GetHedgesForBilling(org.Id, invoice.CreatedAtUtc.Month, invoice.CreatedAtUtc.Year);
-                    var pdfBytes = await pdfService.GenerateInvoicePdf(org, invoice, hedges);
+                    var org = await orgRepo.Get<Organization>(org => org.Id == invoice.OrganizationId);
+
+                    var daysUntilDue = (invoice.DueDate - DateTime.UtcNow).TotalDays;
+
+                    if (daysUntilDue <= 3) // Start reminding 3 days before it's due
+                    {
+                        // 3. RE-GENERATE THE BREAKDOWN (The "Financial Aid" part)
+                        // We need the hedges that were part of this specific statement
+                        var hedges = await hedgeRepo.GetHedgesForBilling(org.Id, invoice.CreatedAtUtc.Month, invoice.CreatedAtUtc.Year);
+                        var pdfBytes = await pdfService.GenerateInvoicePdf(org, invoice, hedges);
+
+                        var adminMemberships = memberships.Where(m => m.OrganizationId == org.Id && m.RoleInOrganization == "Hedge_Admin").ToList();
+                        var adminIds = adminMemberships.Select(m => m.UserId).ToList();
+
+                        if (adminIds.Any())
+                        {
+                            var admins = await userRepo.GetAll<User>(
+                                u => adminIds.Contains(u.Id),
+                                ignoreFilters: true
+                            );
+
+                            foreach (var admin in admins)
+                            {
+                                _logger.LogInformation($"Sending payment reminder for {org.BusinessName} to Admin: {admin.Email}", org.BusinessName, admin.Email);
+                                bool sent = await emailService.SendInvoiceMail(admin.Email, org, invoice, pdfBytes);
+                                if (!sent) anyFailure = true;
+                                _logger.LogInformation($"Sent payment reminder for {invoice.InvoiceNumber} to {org.BusinessName}");
+                            }
+                        }
+                        else
+                        {
+                            _logger.LogWarning("No 'Hedge_Admin' found for Organization: {OrgId}", org.Id);
+                        }
+                    }
+                }
+
+                string message = anyFailure ? $"Daily payment reminder cycle completed with some failures at {DateTime.UtcNow}"
+                    : $"Daily payment reminder cycle completed successfully at  {DateTime.UtcNow}";
+                _logger.LogInformation(message);
+            }
+
+            
+
+        }
+
+        private async Task CleanupExpiredTrials()
+        {
+            using var scope = _serviceProvider.CreateScope();
+            var organizationRepo = scope.ServiceProvider.GetRequiredService<IOrganizationRepository>();
+            var membershipRepo = scope.ServiceProvider.GetRequiredService<IUserOrganizationMembershipRepository>();
+            var organizations = await organizationRepo.GetAll<Organization>(o => true, ignoreFilters: true);
+            var userRepo = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+            var emailService = scope.ServiceProvider.GetRequiredService<IMailService>();
+            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+
+            var memberships = await membershipRepo.GetAll<UserOrganizationMembership>(m => true, ignoreFilters: true);
+
+            // 1. Find all orgs still marked 'IsInTrial' but past their 14-day window
+            var expiredTrials = organizations.Where(o => o.IsInTrial && o.TrialExpiryDate.Value < DateTime.UtcNow).ToList();
+
+            if(expiredTrials is not null || expiredTrials.Any())
+            {
+                bool anyFailure = false;
+
+                foreach (var org in expiredTrials)
+                {
+                    // 2. Flip the bit to false
+                    org.IsInTrial = false;
 
                     var adminMemberships = memberships.Where(m => m.OrganizationId == org.Id && m.RoleInOrganization == "Hedge_Admin").ToList();
                     var adminIds = adminMemberships.Select(m => m.UserId).ToList();
@@ -168,26 +231,38 @@ namespace Infrastructure.HedgeBackgroundWorker
 
                         foreach (var admin in admins)
                         {
-                            _logger.LogInformation($"Sending payment reminder for {org.BusinessName} to Admin: {admin.Email}", org.BusinessName, admin.Email);
-                            bool sent = await emailService.SendInvoiceMail(admin.Email, org, invoice, pdfBytes);
-                            if (!sent) anyFailure = true;
-                            _logger.LogInformation($"Sent payment reminder for {invoice.InvoiceNumber} to {org.BusinessName}");
+                            // 3. Optional: Send a "Trial Ended" email notification
+                            if(DateTime.UtcNow > org.TrialExpiryDate.Value)
+                            {
+                                var isSent = await emailService.SendNotificationMail(
+                                   admin.Email,
+                                   org.BusinessName,
+                                   "Trial Expired",
+                                   "Your 14-day Enterprise trial has ended. Please settle your first invoice to continue hedging.");
+
+                                 if (!isSent) anyFailure = true;
+                                 _logger.LogInformation($"Trial expiry notification sent to {org.BusinessName}");
+                            }
+                           
+
                         }
+
+
                     }
                     else
                     {
                         _logger.LogWarning("No 'Hedge_Admin' found for Organization: {OrgId}", org.Id);
                     }
                 }
+                string message = anyFailure ? $"Trial expiry notification cycle completed with some failures at {DateTime.UtcNow}"
+                    : $"Trial expiry reminder cycle completed successfully at  {DateTime.UtcNow}";
+                _logger.LogInformation(message);
+
+                await unitOfWork.SaveChangesAsync();
             }
 
-            string message = anyFailure ? $"Daily payment reminder cycle completed with some failures at {DateTime.UtcNow}"
-                : $"Daily payment reminder cycle completed successfully at  {DateTime.UtcNow}";
-            _logger.LogInformation(message);
-
+            
         }
-
+        
     }
-
-
 }

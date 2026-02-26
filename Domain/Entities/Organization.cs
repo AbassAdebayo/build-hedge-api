@@ -12,8 +12,9 @@ namespace Domain.Entities
         public string? TaxId { get; set; }
         public SubscriptionPlan SubscriptionPlan { get; set; }
         public string BaseCurrencyCode { get; set; } = null!;
-
-        public DateTime SubscriptionExpiryDate { get; set; } 
+        public DateTime? SubscriptionExpiryDate { get; set; }
+        public bool IsInTrial { get; set; } 
+        public DateTime? TrialExpiryDate { get; set; }
         public decimal AccruedFees { get; set; }
         public bool IsActive { get; set; }
         public ICollection<Project> Projects { get; set; } = new List<Project>();

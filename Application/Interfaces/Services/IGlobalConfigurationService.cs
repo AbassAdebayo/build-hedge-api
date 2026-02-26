@@ -12,7 +12,7 @@ namespace Application.Interfaces.Services
     {
         public Task<BaseResponse<bool>> UpdateSettingAsync(UpdateGlobalSettingsRequestModel request);
         public Task<decimal> GetBaseRateAsync(SubscriptionPlan plan);
-        public Task<int> GetHedgeQuotaAsync(SubscriptionPlan plan);
+        public Task<int> GetHedgeQuotaAsync(SubscriptionPlan plan, DateTime trialExpiry);
         public Task<decimal> GetMonthlyRiskFactorAsync();
         public Task<decimal> GetMinimumFeeAsync();
         public Task<string> GetSystemBaseCurrency();
