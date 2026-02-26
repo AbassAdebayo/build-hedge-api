@@ -1,4 +1,4 @@
-﻿using Application.Tenant;
+﻿using Domain.Contracts.Tenant;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;

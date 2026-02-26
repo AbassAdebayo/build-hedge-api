@@ -1,5 +1,5 @@
 ﻿using Application.DTOs.HedgeContract;
-using Application.ExchangeRate;
+using Application.Interfaces.ExchangeRate;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;

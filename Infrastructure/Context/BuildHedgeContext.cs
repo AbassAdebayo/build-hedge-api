@@ -1,4 +1,4 @@
-﻿using Application.Tenant;
+﻿using Domain.Contracts.Tenant;
 using Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -254,5 +254,6 @@ namespace Infrastructure.Context
         DbSet<DomainRule> DomainRules => Set<DomainRule>();
         DbSet<Currency> Currencies => Set<Currency>();
         DbSet<GlobalSettings> GlobalSettings => Set<GlobalSettings>();
+        DbSet<BillingStatement> BillingStatements => Set<BillingStatement>();
     }
 }

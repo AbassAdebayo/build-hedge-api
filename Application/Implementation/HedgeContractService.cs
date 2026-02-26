@@ -1,10 +1,10 @@
 ﻿using Application.DTOs;
 using Application.DTOs.HedgeContract;
-using Application.ExchangeRate;
+using Application.Interfaces.ExchangeRate;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
-using Application.Tenant;
 using Domain.Contracts.Enum;
+using Domain.Contracts.Tenant;
 using Domain.Entities;
 using Microsoft.Extensions.Configuration;
 using System;

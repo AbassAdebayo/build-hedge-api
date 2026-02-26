@@ -1,5 +1,5 @@
 using Application.DTOs.Auth.Validator;
-using Application.ExchangeRate;
+using Application.Interfaces.ExchangeRate;
 using Domain.Configuration;
 using FluentValidation;
 using FluentValidation.AspNetCore;
@@ -32,7 +32,8 @@ builder.Services.AddHttpClient<ICurrencyExchangeService, CurrencyExchangeService
 
 // Add Email Configurations
 builder.Services.Configure<EmailConfiguration>(builder.Configuration.GetSection("EmailConfiguration"));
-builder.Services.AddHostedService<HedgeLifecycleWorker>();
+builder.Services.AddHostedService<HedgeLifecycleWorker>()
+    .AddHostedService<MonthlyBillingWorker>();
 
 builder.Services.AddControllers(options =>
 {

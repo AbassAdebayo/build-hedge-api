@@ -1,5 +1,6 @@
 ﻿using Domain.Configuration;
 using Domain.Contracts.MailingServices;
+using Domain.Entities;
 using Domain.Messaging;
 using Domain.TemplateEngine;
 using Infrastructure.Exceptions.Messaging;
@@ -96,6 +97,43 @@ namespace Infrastructure.MailingService
                 return false;
             }
         }
+
+        public async Task<bool> SendInvoiceMail(string email, Organization org, BillingStatement statement, byte[] pdfAttachment, bool isReminder = false)
+        {
+            try
+            {
+                var model = new SendInvoiceNotification()
+                {
+                    Name = org.BusinessName,
+                    InvoiceNumber = statement.InvoiceNumber,
+                    AmountDue = statement.TotalAmountDue,
+                    DueDate = statement.DueDate,
+                    BaseCurrency = org.BaseCurrencyCode,
+                    IsReminder = isReminder,
+                    PortalLink = "https://app.buildhedge.com/billing"
+                };
+
+                // 1. Parse the specific Invoice Razor Template
+                var mailBody = await _razorEngine.ParseAsync("SendInvoiceMail", model);
+
+                return await _mailSender.SendWithAttachment(
+                    _emailConfiguration.FromEmail,
+                    _emailConfiguration.FromName,
+                    email,
+                    org.BusinessName,
+                    $"{(isReminder ? "REMINDER: " : "")}BuildHedge Invoice {statement.InvoiceNumber}",
+                    mailBody,
+                    pdfAttachment,
+                    $"{statement.InvoiceNumber}.pdf"
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to send {(isReminder ? "reminder" : "invoice")} email: {ex.Message}");
+                return false;
+            }
+        }
+
 
         public async Task<bool> SendNotificationMail(string email, string name, string title, string body)
         {

@@ -2,7 +2,7 @@
 using Application.DTOs.Material;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
-using Application.Tenant;
+using Domain.Contracts.Tenant;
 using Domain.Entities;
 using Microsoft.Extensions.Logging;
 using System;

@@ -1,5 +1,5 @@
 ﻿using Application.DTOs;
-using Application.ExchangeRate;
+using Application.Interfaces.ExchangeRate;
 using Application.Interfaces.Services;
 using Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
