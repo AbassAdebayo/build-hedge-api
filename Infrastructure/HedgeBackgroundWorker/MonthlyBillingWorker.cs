@@ -47,14 +47,14 @@ namespace Infrastructure.HedgeBackgroundWorker
             var globalConfig = scope.ServiceProvider.GetRequiredService<IGlobalConfigurationService>();
             var pdfService = scope.ServiceProvider.GetRequiredService<IPdfService>();
             var emailService = scope.ServiceProvider.GetRequiredService<IMailService>();
-            var membershipRepo = scope.ServiceProvider.GetRequiredService<IUserOrganizationMembershipRepository>(); 
+            var membershipRepo = scope.ServiceProvider.GetRequiredService<IUserOrganizationMembershipRepository>();
             var userRepo = scope.ServiceProvider.GetRequiredService<IUserRepository>();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
             var organizations = await orgRepo.GetAll<Organization>(o => true, ignoreFilters: true);
             var memberships = await membershipRepo.GetAll<UserOrganizationMembership>(m => true, ignoreFilters: true);
 
-            bool sent = false;
+            bool anyFailure = false;
 
             foreach (var org in organizations)
             {
@@ -91,6 +91,7 @@ namespace Infrastructure.HedgeBackgroundWorker
                 var adminMemberships = memberships.Where(m => m.OrganizationId == org.Id && m.RoleInOrganization == "Hedge_Admin").ToList();
                 var adminIds = adminMemberships.Select(m => m.UserId).ToList();
 
+
                 if (adminIds.Any())
                 {
                     var admins = await userRepo.GetAll<User>(
@@ -98,10 +99,12 @@ namespace Infrastructure.HedgeBackgroundWorker
                         ignoreFilters: true
                     );
 
-                    foreach(var admin in admins)
+                    foreach (var admin in admins)
                     {
                         _logger.LogInformation("Sending invoice for {OrgName} to Admin: {Email}", org.BusinessName, admin.Email);
-                        sent =  await emailService.SendInvoiceMail(admin.Email, org, statement, pdfBytes);
+                        var sent = await emailService.SendInvoiceMail(admin.Email, org, statement, pdfBytes);
+
+                        if (!sent) anyFailure = true;
                     }
                 }
                 else
@@ -111,11 +114,12 @@ namespace Infrastructure.HedgeBackgroundWorker
 
 
             }
-            if (sent)
-            {
-                _logger.LogInformation("Monthly billing cycle completed successfully at {Time}", DateTime.UtcNow);
-                await unitOfWork.SaveChangesAsync();
-            }
+            string message = anyFailure ? $"Monthly billing cycle completed with some failures at {DateTime.UtcNow}"
+                : $"Monthly billing cycle completed successfully at  {DateTime.UtcNow}";
+
+            logger.LogError(message);
+
+
 
         }
 
@@ -136,6 +140,8 @@ namespace Infrastructure.HedgeBackgroundWorker
             // Find all unpaid invoices that are due in 3 days or already past due
             var threeDaysFromNow = DateTime.UtcNow.AddDays(3);
             var pendingInvoices = await billingRepo.GetAll<BillingStatement>(s => !s.IsPaid && s.DueDate <= threeDaysFromNow);
+
+            bool anyFailure = false;
 
             foreach (var invoice in pendingInvoices)
             {
@@ -164,8 +170,8 @@ namespace Infrastructure.HedgeBackgroundWorker
                         {
                             _logger.LogInformation($"Sending payment reminder for {org.BusinessName} to Admin: {admin.Email}", org.BusinessName, admin.Email);
                             bool sent = await emailService.SendInvoiceMail(admin.Email, org, invoice, pdfBytes);
-                            if (sent)
-                                _logger.LogInformation($"Sent payment reminder for {invoice.InvoiceNumber} to {org.BusinessName}");
+                            if (!sent) anyFailure = true;
+                            _logger.LogInformation($"Sent payment reminder for {invoice.InvoiceNumber} to {org.BusinessName}");
                         }
                     }
                     else
@@ -175,7 +181,9 @@ namespace Infrastructure.HedgeBackgroundWorker
                 }
             }
 
-            
+            string message = anyFailure ? $"Daily payment reminder cycle completed with some failures at {DateTime.UtcNow}"
+                : $"Daily payment reminder cycle completed successfully at  {DateTime.UtcNow}";
+            _logger.LogInformation(message);
 
         }
 
