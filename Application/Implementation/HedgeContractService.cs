@@ -48,7 +48,7 @@ namespace Application.Implementation
             var responseItems = new List<HedgeItemDetail>();
             var hedgesToSave = new List<HedgeContract>();
 
-            int maxHedgeAllowed = await _globalConfigService.GetHedgeQuotaAsync(organization.SubscriptionPlan);
+            int maxHedgeAllowed = await _globalConfigService.GetHedgeQuotaAsync(organization.SubscriptionPlan, organization.TrialExpiryDate!.Value);
             decimal overageFeeRate = await _globalConfigService.GetOverageFeeAsync(organization.SubscriptionPlan);
             decimal baseRate = await _globalConfigService.GetBaseRateAsync(organization.SubscriptionPlan);
             decimal minimumFee = await _globalConfigService.GetMinimumFeeAsync();

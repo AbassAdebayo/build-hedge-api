@@ -47,11 +47,13 @@ namespace Infrastructure.Middleware
                     var organization = await organizationContext.Get<Organization>(o => o.Id == currentTenantId);
 
                     // Check if the Subscription (Membership) is still valid
-                    bool isSubscriptionExpired = DateTime.UtcNow > organization.SubscriptionExpiryDate;
-                    bool isUnderTrial = DateTime.UtcNow <= organization.CreatedAtUtc.AddDays(14);
+                    bool isUnderTrial = organization.IsInTrial && DateTime.UtcNow <= organization.TrialExpiryDate.Value;
+
+                    bool isSubscriptionExpired = !isUnderTrial &&
+                        (!organization.SubscriptionExpiryDate.HasValue || DateTime.UtcNow > organization.SubscriptionExpiryDate.Value);
 
                     int currentMonthCount = await hedgeContext.GetMonthlyHedgeCount(organization.Id);
-                    int maxAllowed = await globalConfig.GetHedgeQuotaAsync(organization.SubscriptionPlan);
+                    int maxAllowed = await globalConfig.GetHedgeQuotaAsync(organization.SubscriptionPlan, organization.TrialExpiryDate.Value);
 
                     // Fetch credit limit for the organization's subscription plan and check if they are over the limit
                     decimal creditLimit = await globalConfig.GetCreditLimitAsync(organization.SubscriptionPlan);
@@ -75,7 +77,7 @@ namespace Infrastructure.Middleware
                         }
 
                         // Rule A: Block if Subscription is expired (and not in trial)
-                        if (isSubscriptionExpired && !isUnderTrial)
+                        if (isSubscriptionExpired)
                         {
                             context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
                             await context.Response.WriteAsJsonAsync(new

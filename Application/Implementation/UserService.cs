@@ -238,6 +238,8 @@ namespace Application.Implementation
                         var organization = await _organizationRepository.Get<Organization>(o => o.Id == membership.OrganizationId);
                         if(organization is null) return new AuthResponse("Unable to find organization for this user", false);
                         organization.IsActive = true;
+                        organization.IsInTrial = true;
+                        organization.TrialExpiryDate = DateTime.UtcNow.AddDays(14);
                         await _organizationRepository.Update<Organization>(organization);
                        
                         message = "Admin validated successfully! Kindly login to setup your organization";
