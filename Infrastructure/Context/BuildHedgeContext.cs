@@ -55,6 +55,15 @@ namespace Infrastructure.Context
                 entity.Property(e => e.Quantity).HasPrecision(18, 4);
                 entity.Property(e => e.ExchangeRateAtLock).HasPrecision(18, 4);
                 entity.Property(e => e.TotalValueBaseCurrency).HasPrecision(18, 4);
+                entity.Property(e => e.OverageFee).HasPrecision(18, 4);
+            });
+
+            modelBuilder.Entity<BillingStatement>(entity =>
+            {
+                entity.Ignore(b => b.TotalAmountDue);
+                entity.Property(b => b.TotalOverageFees).HasPrecision(18, 4);
+                entity.Property(b => b.TotalPremiumFees).HasPrecision(18, 4);
+                entity.Property(b => b.SubscriptionBaseFee).HasPrecision(18, 4);
             });
 
             modelBuilder.Entity<MaterialPriceHistory>()
@@ -88,6 +97,10 @@ namespace Infrastructure.Context
             modelBuilder.Entity<Organization>()
                 .HasIndex(org => org.BusinessName)
                 .IsUnique();
+
+            modelBuilder.Entity<Organization>()
+                .Property(o => o.AccruedFees)
+                .HasPrecision(18, 4);
 
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)
@@ -136,6 +149,7 @@ namespace Infrastructure.Context
                 BusinessName = "Build Hedge",
                 BaseCurrencyCode = "NGN",
                 IsActive = true,
+                IsInTrial = true,
                 SubscriptionPlan = Domain.Contracts.Enum.SubscriptionPlan.Enterprise,
                 CreatedAtUtc = SeedDate,
                 CreatedBy = creator

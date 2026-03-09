@@ -1,9 +1,9 @@
-﻿using Application.ExchangeRate;
-using Application.Implementation;
+﻿using Application.Implementation;
 using Application.Interfaces.Identity;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Domain.Contracts.MailingServices;
+using Domain.Contracts.PdfHandler;
 using Domain.Contracts.Tenant;
 using Domain.Entities;
 using Domain.Messaging;
@@ -11,9 +11,10 @@ using Domain.TemplateEngine;
 using Infrastructure.Context;
 using Infrastructure.ExchangeRate;
 using Infrastructure.Identity;
-using Infrastructure.MailingService;
 using Infrastructure.Messaging;
+using Infrastructure.PdfHandler;
 using Infrastructure.Repositories;
+using Infrastructure.Services.MailingService;
 using Infrastructure.TemplateEngine;
 using Infrastructure.Tenant;
 using Microsoft.AspNetCore.Identity;
@@ -42,6 +43,7 @@ namespace Infrastructure.IOC.Extensions
                 .AddScoped<IHedgeContractService, HedgeContractService>()
                 .AddScoped<IPlatformRevenueService, PlatformRevenueService>()
                 .AddScoped<IGlobalConfigurationService, GlobalConfigurationService>()
+                .AddScoped<IPdfService, PdfService>()
                 .AddScoped<IMailSender, MailSender>()
                 .AddScoped<IMailService, MailService>()
                 .AddScoped<IRazorEngine, RazorEngine>();
@@ -61,6 +63,7 @@ namespace Infrastructure.IOC.Extensions
                 .AddScoped<IMaterialRepository, MaterialRepository>()
                 .AddScoped<IHedgeContractRepository, HedgeContractRepository>()
                 .AddScoped<IGlobalConfigurationRepository, GlobalConfigurationRepository>()
+                .AddScoped<IBillingRepository, BillingRepository>()
                 .AddScoped<IUserOrganizationMembershipRepository, UserOrganizationMembershipRepository>();
 
 

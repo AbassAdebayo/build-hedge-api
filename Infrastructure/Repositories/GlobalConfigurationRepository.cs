@@ -1,4 +1,5 @@
-﻿using Application.Interfaces.Repositories;
+﻿#nullable enable
+using Application.Interfaces.Repositories;
 using Domain.Entities;
 using Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;

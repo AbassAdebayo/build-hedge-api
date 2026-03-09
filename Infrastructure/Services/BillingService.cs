@@ -3,44 +3,27 @@ using Application.Interfaces.Services;
 using Domain.Contracts.MailingServices;
 using Domain.Contracts.PdfHandler;
 using Domain.Entities;
-using Infrastructure.PdfHandler;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using NETCore.MailKit.Core;
-using Org.BouncyCastle.Asn1.X509.Qualified;
+using Quartz.Logging;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Infrastructure.HedgeBackgroundWorker
+namespace Infrastructure.Services
 {
-    public class MonthlyBillingWorker(IServiceProvider serviceProvider, ILogger<MonthlyBillingWorker> logger) : BackgroundService
+    public class BillingService
     {
-        private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-        private readonly ILogger<MonthlyBillingWorker> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        private readonly IServiceProvider _serviceProvider;
+        private readonly ILogger<BillingService> _logger;
+
+        public BillingService(IServiceProvider serviceProvider, ILogger<BillingService> logger)
         {
-            var now = DateTime.UtcNow;
-
-            // 1. RUN MONTHLY BILLING: On the 1st of every month
-            if (now.Day == 1 && now.Hour == 1)
-            {
-                await RunBillingCycle();
-            }
-
-            // 2. RUN DAILY REMINDERS: Every day at 9 AM
-            if (now.Hour == 9 && now.Minute == 0)
-            {
-                await SendPaymentReminders();
-            }
-
-            await CleanupExpiredTrials();
-
-             await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+            _serviceProvider = serviceProvider;
+            _logger = logger;
         }
 
-        private async Task RunBillingCycle()
+        public async Task RunBillingCycle()
         {
             using var scope = _serviceProvider.CreateScope();
             var orgRepo = scope.ServiceProvider.GetRequiredService<IOrganizationRepository>();
@@ -53,23 +36,39 @@ namespace Infrastructure.HedgeBackgroundWorker
             var userRepo = scope.ServiceProvider.GetRequiredService<IUserRepository>();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-            var organizations = await orgRepo.GetAll<Organization>(o => true, ignoreFilters: true);
+            var organizations = await orgRepo.GetAll<Organization>(o => o.BusinessName != "Build Hedge", ignoreFilters: true);
             var memberships = await membershipRepo.GetAll<UserOrganizationMembership>(m => true, ignoreFilters: true);
 
             bool anyFailure = false;
 
             foreach (var org in organizations)
             {
-                // APPLY YOUR MIDDLEWARE LOGIC HERE
-                bool isUnderTrial = DateTime.UtcNow <= org.TrialExpiryDate.Value;
+                bool isUnderTrial = org.TrialExpiryDate.HasValue && DateTime.UtcNow <= org.TrialExpiryDate.Value;
 
                 if (isUnderTrial && org.AccruedFees == 0) continue;
 
-                // Calculate the Base Fee: If trial, it's $0. If not, fetch by Plan.
                 decimal baseFee = isUnderTrial ? 0 : await globalConfig.GetBaseRateAsync(org.SubscriptionPlan);
 
-                var lastMonth = DateTime.UtcNow.AddMonths(-1);
-                var hedges = await hedgeRepo.GetHedgesForBilling(org.Id, lastMonth.Month, lastMonth.Year);
+                //var billingPeriod = DateTime.UtcNow.AddMonths(-1);
+                var billingPeriod = DateTime.UtcNow;
+
+                var startDate = new DateTime(
+                    billingPeriod.Year,
+                    billingPeriod.Month, 1);
+
+                var endDate = startDate.AddMonths(1);
+                var hedges = await hedgeRepo.GetHedgesForBilling(org.Id, startDate, endDate);
+
+                 _logger.LogInformation(
+                "Billing Period Start: {Start} End: {End}",
+                startDate,
+                endDate);
+
+                if (hedges is null || !hedges.Any())
+                {
+                    _logger.LogInformation("No hedges found for {Org}", org.BusinessName);
+                    continue;
+                }
 
                 var statement = new BillingStatement
                 {
@@ -86,47 +85,36 @@ namespace Infrastructure.HedgeBackgroundWorker
 
                 await billingRepo.Add(statement);
 
-                // 3. Reset WIP (AccruedFees) to 0
                 org.AccruedFees = 0;
                 await orgRepo.Update(org);
 
-                var adminMemberships = memberships.Where(m => m.OrganizationId == org.Id && m.RoleInOrganization == "Hedge_Admin").ToList();
-                var adminIds = adminMemberships.Select(m => m.UserId).ToList();
+                var adminMemberships = memberships
+                    .Where(m => m.OrganizationId == org.Id && m.RoleInOrganization == "Hedge_Admin")
+                    .ToList();
 
+                var adminIds = adminMemberships.Select(m => m.UserId);
 
                 if (adminIds.Any())
                 {
-                    var admins = await userRepo.GetAll<User>(
-                        u => adminIds.Contains(u.Id),
-                        ignoreFilters: true
-                    );
+                    var admins = await userRepo.GetAll<User>(u => adminIds.Contains(u.Id), ignoreFilters: true);
 
                     foreach (var admin in admins)
                     {
-                        _logger.LogInformation("Sending invoice for {OrgName} to Admin: {Email}", org.BusinessName, admin.Email);
-                        var sent = await emailService.SendInvoiceMail(admin.Email, org, statement, pdfBytes);
-
+                        bool sent = await emailService.SendInvoiceMail(admin.Email, org, statement, pdfBytes);
                         if (!sent) anyFailure = true;
                     }
                 }
-                else
-                {
-                    _logger.LogWarning("No 'Hedge_Admin' found for Organization: {OrgId}", org.Id);
-                }
-
-
             }
-            string message = anyFailure ? $"Monthly billing cycle completed with some failures at {DateTime.UtcNow}"
-                : $"Monthly billing cycle completed successfully at  {DateTime.UtcNow}";
-            logger.LogError(message);
 
             await unitOfWork.SaveChangesAsync();
 
-
-
+            _logger.LogInformation(
+                anyFailure
+                ? "Billing cycle completed with failures"
+                : "Billing cycle completed successfully");
         }
 
-        private async Task SendPaymentReminders()
+        public async Task SendPaymentReminders()
         {
             using var scope = _serviceProvider.CreateScope();
             var billingRepo = scope.ServiceProvider.GetRequiredService<IBillingRepository>();
@@ -137,14 +125,14 @@ namespace Infrastructure.HedgeBackgroundWorker
             var membershipRepo = scope.ServiceProvider.GetRequiredService<IUserOrganizationMembershipRepository>();
             var userRepo = scope.ServiceProvider.GetRequiredService<IUserRepository>();
 
-            var organizations = await orgRepo.GetAll<Organization>(o => true, ignoreFilters: true);
+            var organizations = await orgRepo.GetAll<Organization>(o => o.BusinessName != "Build Hedge", ignoreFilters: true);
             var memberships = await membershipRepo.GetAll<UserOrganizationMembership>(m => true, ignoreFilters: true);
 
             // Find all unpaid invoices that are due in 3 days or already past due
             var threeDaysFromNow = DateTime.UtcNow.AddDays(3);
             var pendingInvoices = await billingRepo.GetAll<BillingStatement>(s => !s.IsPaid && s.DueDate <= threeDaysFromNow);
 
-            if(pendingInvoices is not null || pendingInvoices.Any())
+            if (pendingInvoices is not null || pendingInvoices.Any())
             {
                 bool anyFailure = false;
 
@@ -158,7 +146,18 @@ namespace Infrastructure.HedgeBackgroundWorker
                     {
                         // 3. RE-GENERATE THE BREAKDOWN (The "Financial Aid" part)
                         // We need the hedges that were part of this specific statement
-                        var hedges = await hedgeRepo.GetHedgesForBilling(org.Id, invoice.CreatedAtUtc.Month, invoice.CreatedAtUtc.Year);
+
+                        //var billingPeriod = DateTime.UtcNow.AddMonths(-1);
+                        var billingPeriod = invoice.CreatedAtUtc;
+
+                        var startDate = new DateTime(
+                            billingPeriod.Year,
+                            billingPeriod.Month,
+                            1);
+
+                        var endDate = startDate.AddMonths(1);
+
+                        var hedges = await hedgeRepo.GetHedgesForBilling(org.Id, startDate, endDate);
                         var pdfBytes = await pdfService.GenerateInvoicePdf(org, invoice, hedges);
 
                         var adminMemberships = memberships.Where(m => m.OrganizationId == org.Id && m.RoleInOrganization == "Hedge_Admin").ToList();
@@ -191,11 +190,11 @@ namespace Infrastructure.HedgeBackgroundWorker
                 _logger.LogInformation(message);
             }
 
-            
+
 
         }
 
-        private async Task CleanupExpiredTrials()
+        public async Task CleanupExpiredTrials()
         {
             using var scope = _serviceProvider.CreateScope();
             var organizationRepo = scope.ServiceProvider.GetRequiredService<IOrganizationRepository>();
@@ -208,9 +207,11 @@ namespace Infrastructure.HedgeBackgroundWorker
             var memberships = await membershipRepo.GetAll<UserOrganizationMembership>(m => true, ignoreFilters: true);
 
             // 1. Find all orgs still marked 'IsInTrial' but past their 14-day window
-            var expiredTrials = organizations.Where(o => o.IsInTrial && o.TrialExpiryDate.Value < DateTime.UtcNow).ToList();
+            var expiredTrials = organizations
+                .Where(o => o.IsInTrial && o.TrialExpiryDate.GetValueOrDefault(DateTime.MaxValue) < DateTime.UtcNow)
+                .ToList();
 
-            if(expiredTrials is not null || expiredTrials.Any())
+            if (expiredTrials is not null || expiredTrials.Any())
             {
                 bool anyFailure = false;
 
@@ -232,7 +233,7 @@ namespace Infrastructure.HedgeBackgroundWorker
                         foreach (var admin in admins)
                         {
                             // 3. Optional: Send a "Trial Ended" email notification
-                            if(DateTime.UtcNow > org.TrialExpiryDate.Value)
+                            if (org.TrialExpiryDate.HasValue && DateTime.UtcNow > org.TrialExpiryDate.Value)
                             {
                                 var isSent = await emailService.SendNotificationMail(
                                    admin.Email,
@@ -240,10 +241,10 @@ namespace Infrastructure.HedgeBackgroundWorker
                                    "Trial Expired",
                                    "Your 14-day Enterprise trial has ended. Please settle your first invoice to continue hedging.");
 
-                                 if (!isSent) anyFailure = true;
-                                 _logger.LogInformation($"Trial expiry notification sent to {org.BusinessName}");
+                                if (!isSent) anyFailure = true;
+                                _logger.LogInformation($"Trial expiry notification sent to {org.BusinessName}");
                             }
-                           
+
 
                         }
 
@@ -261,8 +262,7 @@ namespace Infrastructure.HedgeBackgroundWorker
                 await unitOfWork.SaveChangesAsync();
             }
 
-            
+
         }
-        
     }
 }

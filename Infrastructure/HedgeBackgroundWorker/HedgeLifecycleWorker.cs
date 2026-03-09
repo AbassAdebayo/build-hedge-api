@@ -7,7 +7,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Text;  
 
 namespace Infrastructure.HedgeBackgroundWorker
 {
@@ -67,7 +67,7 @@ namespace Infrastructure.HedgeBackgroundWorker
                 
                 var today = DateTime.UtcNow.Date;
                 
-                // SCENARIO 1: (Already Expired)
+                // (Already Expired)
                 var expired = await hedgeContext.GetAll<HedgeContract>(
                     hc => hc.Status == Domain.Contracts.Enum.ContractStatus.Active &&
                     hc.ExpiryDate < today &&
@@ -107,7 +107,7 @@ namespace Infrastructure.HedgeBackgroundWorker
 
                 }
 
-                // SCENARIO 2: The Warning(Expiring in 7 days)
+                // The Warning(Expiring in 7 days)
                 var warningDate = today.AddDays(7);
                 var startOfTheFinalDay = warningDate;
                 var endOfTheFinalDay = warningDate.AddDays(1).AddTicks(-1);
@@ -149,7 +149,7 @@ namespace Infrastructure.HedgeBackgroundWorker
 
                 }
 
-                // SCENARIO 3: The Final Alert (Expiring tomorrow)
+                // The Final Alert (Expiring tomorrow)
                 var finalDate = today.AddDays(1);
                 var lastCall = await hedgeContext.GetAll<HedgeContract>(h =>
                     h.Status == ContractStatus.Active &&

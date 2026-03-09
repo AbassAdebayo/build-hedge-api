@@ -1,14 +1,13 @@
 ﻿using Application.Interfaces.Repositories;
 using Domain.Entities;
 using Infrastructure.Context;
-using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Text;
 
-namespace Application.Implementation
+namespace Infrastructure.Repositories
 {
     public class ProjectRepository(BuildHedgeContext context) : BaseRepository(context), IProjectRepository
     {
