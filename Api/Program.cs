@@ -3,16 +3,20 @@ using Application.Interfaces.ExchangeRate;
 using Domain.Configuration;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Infrastructure.Context;
 using Infrastructure.ExchangeRate;
 using Infrastructure.Extensions;
 using Infrastructure.HedgeBackgroundWorker;
 using Infrastructure.IOC.Extensions;
-using Infrastructure.Middleware;
+using Infrastructure.Jobs;
+using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using Quartz;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.RateLimiting;
@@ -28,12 +32,67 @@ builder.Services.Configure<DataProtectionTokenProviderOptions>(o =>
 
 builder.Services.AddDatabase(builder.Configuration.GetConnectionString("HedgeConnection")!)
     .AddMemoryCache();
+
+// For Subscription Middleware, we need to create a scope for DbContext
+builder.Services.AddDbContextFactory<BuildHedgeContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("HedgeConnection")), ServiceLifetime.Scoped);
+
 builder.Services.AddHttpClient<ICurrencyExchangeService, CurrencyExchangeService>();
 
 // Add Email Configurations
 builder.Services.Configure<EmailConfiguration>(builder.Configuration.GetSection("EmailConfiguration"));
-builder.Services.AddHostedService<HedgeLifecycleWorker>()
-    .AddHostedService<MonthlyBillingWorker>();
+builder.Services.AddHostedService<HedgeLifecycleWorker>();
+
+builder.Services.AddScoped<BillingService>();
+
+// Billing Job Setup
+// Runs 1AM on the 1st of every month
+builder.Services.AddQuartz(q =>
+{
+    var billingKey = new JobKey("monthlyBilling");
+
+    q.AddJob<MonthlyBillingJob>(opts => opts.WithIdentity(billingKey));
+
+    q.AddTrigger(opts => opts
+        .ForJob(billingKey)
+        .WithIdentity("monthlyBillingTrigger")
+        .WithCronSchedule("0 0 1 1 * ?"));
+        //.WithCronSchedule("0 52 21 * * ?"));
+
+// Payments Reminder Job Setup
+// Runs every day at 9AM
+var reminderKey = new JobKey("paymentReminder");
+
+    q.AddJob<PaymentReminderJob>(opts => opts.WithIdentity(reminderKey));
+
+    q.AddTrigger(opts => opts
+        .ForJob(reminderKey)
+        .WithCronSchedule("0 0 9 * * ?"));
+
+
+    // Trial Cleanup Job Setup
+    // Runs every 6 hours
+    var cleanupKey = new JobKey("trialCleanup");
+
+    q.AddJob<TrialCleanupJob>(opts => opts.WithIdentity(cleanupKey));
+
+    q.AddTrigger(opts => opts
+        .ForJob(cleanupKey)
+        .WithCronSchedule("0 0 */6 * * ?"));
+});
+
+
+builder.Services.AddQuartzHostedService(options =>
+{
+    options.WaitForJobsToComplete = true;
+});
+
+
+builder.Services.Configure<HostOptions>(options =>
+{
+    options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
+});
+
 
 builder.Services.AddControllers(options =>
 {

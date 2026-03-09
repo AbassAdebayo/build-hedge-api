@@ -15,7 +15,7 @@ namespace Application.Interfaces.Repositories
 
         Task<IEnumerable<HedgeContract>> GetAllGlobalContractsAsync();
 
-        Task<List<HedgeContract>> GetHedgesForBilling(Guid organizationId, int month, int year);
+        Task<List<HedgeContract>> GetHedgesForBilling(Guid organizationId, DateTime startDate, DateTime endDate);
 
     }
 }

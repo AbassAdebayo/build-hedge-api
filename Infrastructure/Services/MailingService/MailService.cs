@@ -13,7 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Infrastructure.MailingService
+namespace Infrastructure.Services.MailingService
 {
     public class MailService(IMailSender mailSender, IRazorEngine razorEngine,
         IOptions<EmailConfiguration> options, ILogger<MailService> logger) : IMailService

@@ -38,7 +38,7 @@ namespace Infrastructure.Repositories
         public async Task<T> Get<T>(Expression<Func<T, bool>> expression) where T : Domain.Contracts.Entities.BaseEntity
         {
 #pragma warning disable CS8603 // Possible null reference return.
-            return await _context.Set<T>().FirstOrDefaultAsync(expression);
+            return await _context.Set<T>().Where(expression).SingleOrDefaultAsync();
 #pragma warning restore CS8603 // Possible null reference return.
         }
 

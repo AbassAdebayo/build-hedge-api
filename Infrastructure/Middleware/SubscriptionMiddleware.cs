@@ -1,111 +1,101 @@
 ﻿using Application.Interfaces.Identity;
-using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Domain.Contracts.Tenant;
 using Domain.Entities;
+using Infrastructure.Context;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
 using System.Net;
-using System.Text;
 
-namespace Infrastructure.Middleware
+public class SubscriptionMiddleware
 {
-    public class SubscriptionMiddleware(RequestDelegate next)
+    private readonly RequestDelegate _next;
+    private readonly IServiceScopeFactory _scopeFactory;
+
+    public SubscriptionMiddleware(RequestDelegate next, IServiceScopeFactory scopeFactory)
     {
-        private readonly RequestDelegate _next = next ?? throw new ArgumentNullException(nameof(next));
+        _next = next ?? throw new ArgumentNullException(nameof(next));
+        _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
+    }
 
-        public async Task InvokeAsync(HttpContext context, IServiceProvider serviceProvider)
+    public async Task InvokeAsync(HttpContext context)
+    {
+        var shouldBlock = false;
+        object? errorResponse = null;
+
+        using (var scope = _scopeFactory.CreateScope())
         {
-            // Skip check for non-API routes or specific endpoints (Auth, etc.)
-            var path = context.Request.Path.Value?.ToLower();
-            if (path != null && (path.Contains("/auth/") || path.Contains("/public/")))
-            {
-                await _next(context);
-                return;
-            }
+            var contextFactory = scope.ServiceProvider
+                .GetRequiredService<IDbContextFactory<BuildHedgeContext>>();
 
-            // 2. Create a scope to resolve Scoped Services (Repositories)
-            using (var scope = serviceProvider.CreateScope())
-            {
-                var identityContext = scope.ServiceProvider.GetRequiredService<IIdentityService>();
-                var hedgeContext = scope.ServiceProvider.GetRequiredService<IHedgeContractRepository>();
-                var tenantContext = scope.ServiceProvider.GetRequiredService<ITenantProvider>();
-                var userMembershipContext = scope.ServiceProvider.GetRequiredService<IUserOrganizationMembershipRepository>();
-                var organizationContext = scope.ServiceProvider.GetRequiredService<IOrganizationRepository>();
-                var globalConfig = scope.ServiceProvider.GetRequiredService<IGlobalConfigurationService>();
+            await using var dbContext = await contextFactory.CreateDbContextAsync();
 
-                var currentTenantId = tenantContext.GetTenantId();
+            var identityContext = scope.ServiceProvider.GetRequiredService<IIdentityService>();
+            var tenantContext = scope.ServiceProvider.GetRequiredService<ITenantProvider>();
+            var globalConfig = scope.ServiceProvider.GetRequiredService<IGlobalConfigurationService>();
+
+            var loggedInUser = identityContext.GetLoggedInUser();
+            if (loggedInUser is not null)
+            {
                 var currentUserId = tenantContext.GetTenantUserId();
 
-                var loggedInUser = identityContext.GetLoggedInUser();
+                var currentUser = await dbContext.Set<UserOrganizationMembership>()
+                    .SingleOrDefaultAsync(m => m.UserId == currentUserId);
 
-                if (loggedInUser is not null)
+                if (currentUser?.RoleInOrganization != "Hedge_Owner")
                 {
-                    var currentUser = await userMembershipContext.Get<UserOrganizationMembership>(m => m.UserId == currentUserId);
-                    var organization = await organizationContext.Get<Organization>(o => o.Id == currentTenantId);
+                    var path = context.Request.Path.Value?.ToLower() ?? "";
+                    bool isPublicPath = path.Contains("/auth/") || path.Contains("/public/");
 
-                    // Check if the Subscription (Membership) is still valid
-                    bool isUnderTrial = organization.IsInTrial && DateTime.UtcNow <= organization.TrialExpiryDate.Value;
-
-                    bool isSubscriptionExpired = !isUnderTrial &&
-                        (!organization.SubscriptionExpiryDate.HasValue || DateTime.UtcNow > organization.SubscriptionExpiryDate.Value);
-
-                    int currentMonthCount = await hedgeContext.GetMonthlyHedgeCount(organization.Id);
-                    int maxAllowed = await globalConfig.GetHedgeQuotaAsync(organization.SubscriptionPlan, organization.TrialExpiryDate.Value);
-
-                    // Fetch credit limit for the organization's subscription plan and check if they are over the limit
-                    decimal creditLimit = await globalConfig.GetCreditLimitAsync(organization.SubscriptionPlan);
-                    bool isOverDebtLimit = organization.AccruedFees >= creditLimit;
-
-                    context.Response.OnStarting(() => {
-                        context.Response.Headers.Append("X-Hedge-Usage-Current", currentMonthCount.ToString());
-                        context.Response.Headers.Append("X-Hedge-Is-Trial", isUnderTrial.ToString());
-                        context.Response.Headers.Append("X-Hedge-Accrued-Fees", organization.AccruedFees.ToString("F2"));
-                        context.Response.Headers.Append("X-Subscription-Expired", isSubscriptionExpired.ToString());
-                        return Task.CompletedTask;
-                    });
-
-                    if (context.Request.Method == HttpMethods.Post && path.Contains("/hedge"))
+                    if (!isPublicPath)
                     {
-                        // Admins can always bypass to fix settings or pay bills
-                        if (currentUser.RoleInOrganization == "Hedge_Admin")
-                        {
-                            await _next(context);
-                            return;
-                        }
+                        var currentTenantId = tenantContext.GetTenantId();
 
-                        // Rule A: Block if Subscription is expired (and not in trial)
-                        if (isSubscriptionExpired)
+                        var organization = await dbContext.Set<Organization>()
+                            .SingleOrDefaultAsync(o => o.Id == currentTenantId);
+
+                        if (organization != null
+                            && context.Request.Method == HttpMethods.Post
+                            && path.Contains("/hedges"))
                         {
-                            context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-                            await context.Response.WriteAsJsonAsync(new
+                            decimal creditLimit = await globalConfig
+                                .GetCreditLimitAsync(organization.SubscriptionPlan);
+
+                            bool isUnderTrial = organization.IsInTrial
+                                && organization.TrialExpiryDate.HasValue
+                                && DateTime.UtcNow <= organization.TrialExpiryDate.Value;
+
+                            bool isSubscriptionExpired = !isUnderTrial
+                                && (!organization.SubscriptionExpiryDate.HasValue
+                                    || DateTime.UtcNow > organization.SubscriptionExpiryDate.Value);
+
+                            bool isOverDebtLimit = organization.AccruedFees >= creditLimit;
+
+                            if (isSubscriptionExpired || isOverDebtLimit)
                             {
-                                error = "Subscription Expired",
-                                message = "Your annual/monthly subscription has expired. Please renew to continue locking prices."
-                            });
-                            return;
+                                shouldBlock = true;
+                                errorResponse = new
+                                {
+                                    error = "Access Denied",
+                                    message = isSubscriptionExpired
+                                        ? "Subscription expired."
+                                        : "Credit limit reached."
+                                };
+                            }
                         }
-
-                        // Rule B: Block if they owe too much money in premium fees
-                        if (isOverDebtLimit)
-                        {
-                            context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-                            await context.Response.WriteAsJsonAsync(new
-                            {
-                                error = "Credit Limit Reached",
-                                message = $"Your accrued fees ({organization.AccruedFees:C}) exceed your credit limit. Please settle your account."
-                            });
-                            return;
-                        }
-
                     }
                 }
             }
-
-            await _next(context);
         }
 
+        if (shouldBlock)
+        {
+            context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+            await context.Response.WriteAsJsonAsync(errorResponse);
+            return;
+        }
+
+        await _next(context);
     }
 }

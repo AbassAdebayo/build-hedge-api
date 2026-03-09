@@ -58,14 +58,21 @@ namespace Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public Task<List<HedgeContract>> GetHedgesForBilling(Guid organizationId, int month, int year)
+        public async Task<List<HedgeContract>> GetHedgesForBilling(Guid organizationId, DateTime startDate, DateTime endDate)
         {
-            return _context.Set<HedgeContract>()
-                .Where(hc => hc.OrganizationId == organizationId 
-                    && hc.CreatedAtUtc.Month == month 
-                    && hc.CreatedAtUtc.Year == year)
-                .OrderByDescending(hc => hc.CreatedAtUtc)
-                .ToListAsync();
+                    var hedges = await _context.Set<HedgeContract>()
+                        .IgnoreQueryFilters()
+                        .Include(hc => hc.Material)
+                        .Include(hc => hc.Currency)
+                        .Where(hc =>
+                            hc.OrganizationId == organizationId &&
+                            hc.CreatedAtUtc >= startDate &&
+                            hc.CreatedAtUtc < endDate)
+                        .OrderByDescending(hc => hc.CreatedAtUtc)
+                        .ToListAsync();
+
+            Console.WriteLine($"Retrieved {hedges.Count} hedge contracts for billing for organization {organizationId} between {startDate} and {endDate}.");
+            return hedges;
         }
     }
 }
