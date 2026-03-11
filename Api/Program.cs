@@ -7,6 +7,7 @@ using Infrastructure.Context;
 using Infrastructure.ExchangeRate;
 using Infrastructure.Extensions;
 using Infrastructure.HedgeBackgroundWorker;
+using Infrastructure.IDS;
 using Infrastructure.IOC.Extensions;
 using Infrastructure.Jobs;
 using Infrastructure.Services;
@@ -44,6 +45,7 @@ builder.Services.Configure<EmailConfiguration>(builder.Configuration.GetSection(
 builder.Services.AddHostedService<HedgeLifecycleWorker>();
 
 builder.Services.AddScoped<BillingService>();
+builder.Services.AddScoped<LoginIntrusionDetector>();
 
 // Billing Job Setup
 // Runs 1AM on the 1st of every month
