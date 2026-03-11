@@ -4,6 +4,7 @@ using Application.Implementation;
 using Application.Interfaces.Identity;
 using Application.Interfaces.Services;
 using Domain.Entities;
+using Infrastructure.IDS;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -18,7 +19,8 @@ namespace Api.Controllers
     [ApiController]
     public class AuthController(IOrganizationService organizationService, IUserService userService,
         UserManager<User> userManager, IUserOrganizationMembershipService membershipService,
-        IIdentityService identityService, ILogger<AuthController> logger, IConfiguration configuration
+        IIdentityService identityService, ILogger<AuthController> logger, IConfiguration configuration,
+        LoginIntrusionDetector ids
         ) : ControllerBase
     {
         private readonly IOrganizationService _organizationService = organizationService ?? throw new ArgumentNullException(nameof(organizationService));
@@ -28,6 +30,7 @@ namespace Api.Controllers
         private readonly ILogger<AuthController> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         private readonly IConfiguration _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         private readonly IUserOrganizationMembershipService _membershipService = membershipService ?? throw new ArgumentNullException(nameof(membershipService));
+        private readonly LoginIntrusionDetector _ids = ids ?? throw new ArgumentNullException(nameof(ids));
 
         [AllowAnonymous]
         [HttpPost("register")]
@@ -81,11 +84,22 @@ namespace Api.Controllers
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(LoginResponseModel))]
         public async Task<IActionResult> Login([FromBody] LoginRequestModel request)
         {
+            var ip = HttpContext.Connection.RemoteIpAddress.ToString();
             var user = await _userManager.FindByEmailAsync(request.Email);
-            if(user is null) return BadRequest(new BaseResponse("Incorrect email or password", false));
+            if (user is null)
+            {
+                var blocked = _ids.RecordAttempt(ip);
+                if (blocked) return StatusCode(429, "Too many login attempts. Try again later.");
+                return BadRequest(new BaseResponse("Incorrect email or password", false));
+            }
 
             var isValidPassword = await _userManager.CheckPasswordAsync(user, $"{request.Password}{user.HashSalt}");
-            if (!isValidPassword) return BadRequest(new BaseResponse("Incorrect email or password", false));
+            if (!isValidPassword)
+            {
+                var blocked = _ids.RecordAttempt(ip);
+                if (blocked) return StatusCode(429, "Too many login attempts. Try again later.");
+                return BadRequest(new BaseResponse("Incorrect email or password", false));
+            }
 
             if(!user.IsVerified) return BadRequest(new BaseResponse("Email not verified. Please verify your email before logging in.", false));
 
