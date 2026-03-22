@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Infrastructure.Repositories
 {
-    public class BillingRepository(BuildHedgeContext contex) : BaseRepository(contex), IBillingRepository
+    public class ProcessPaymentRepository(BuildHedgeContext hedgeContext) : BaseRepository(hedgeContext), IProcessPaymentRepository
     {
     }
 }

@@ -1,5 +1,7 @@
 ﻿using Application.Implementation;
 using Application.Interfaces.Identity;
+using Application.Interfaces.IDS;
+using Application.Interfaces.Payment;
 using Application.Interfaces.Repositories;
 using Application.Interfaces.Services;
 using Domain.Contracts.MailingServices;
@@ -11,10 +13,12 @@ using Domain.TemplateEngine;
 using Infrastructure.Context;
 using Infrastructure.ExchangeRate;
 using Infrastructure.Identity;
+using Infrastructure.IDS;
 using Infrastructure.Messaging;
 using Infrastructure.PdfHandler;
 using Infrastructure.Repositories;
 using Infrastructure.Services.MailingService;
+using Infrastructure.Services.Payment;
 using Infrastructure.TemplateEngine;
 using Infrastructure.Tenant;
 using Microsoft.AspNetCore.Identity;
@@ -43,6 +47,9 @@ namespace Infrastructure.IOC.Extensions
                 .AddScoped<IHedgeContractService, HedgeContractService>()
                 .AddScoped<IPlatformRevenueService, PlatformRevenueService>()
                 .AddScoped<IGlobalConfigurationService, GlobalConfigurationService>()
+                .AddScoped<IIdsService, IdsService>()
+                .AddScoped<IPaystackService, PaystackService>()
+                .AddScoped<IBillingStatementService, BillingStatementService>()
                 .AddScoped<IPdfService, PdfService>()
                 .AddScoped<IMailSender, MailSender>()
                 .AddScoped<IMailService, MailService>()
@@ -63,7 +70,8 @@ namespace Infrastructure.IOC.Extensions
                 .AddScoped<IMaterialRepository, MaterialRepository>()
                 .AddScoped<IHedgeContractRepository, HedgeContractRepository>()
                 .AddScoped<IGlobalConfigurationRepository, GlobalConfigurationRepository>()
-                .AddScoped<IBillingRepository, BillingRepository>()
+                .AddScoped<IProcessPaymentRepository,  ProcessPaymentRepository>()
+                .AddScoped<IBillingStatementRepository, BillingStatementRepository>()
                 .AddScoped<IUserOrganizationMembershipRepository, UserOrganizationMembershipRepository>();
 
 

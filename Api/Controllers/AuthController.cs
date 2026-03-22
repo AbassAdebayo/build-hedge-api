@@ -2,6 +2,7 @@
 using Application.DTOs.Auth;
 using Application.Implementation;
 using Application.Interfaces.Identity;
+using Application.Interfaces.IDS;
 using Application.Interfaces.Services;
 using Domain.Entities;
 using Infrastructure.IDS;
@@ -20,7 +21,7 @@ namespace Api.Controllers
     public class AuthController(IOrganizationService organizationService, IUserService userService,
         UserManager<User> userManager, IUserOrganizationMembershipService membershipService,
         IIdentityService identityService, ILogger<AuthController> logger, IConfiguration configuration,
-        LoginIntrusionDetector ids
+        IIdsService ids
         ) : ControllerBase
     {
         private readonly IOrganizationService _organizationService = organizationService ?? throw new ArgumentNullException(nameof(organizationService));
@@ -30,7 +31,7 @@ namespace Api.Controllers
         private readonly ILogger<AuthController> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         private readonly IConfiguration _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         private readonly IUserOrganizationMembershipService _membershipService = membershipService ?? throw new ArgumentNullException(nameof(membershipService));
-        private readonly LoginIntrusionDetector _ids = ids ?? throw new ArgumentNullException(nameof(ids));
+        private readonly IIdsService _ids = ids ?? throw new ArgumentNullException(nameof(ids));
 
         [AllowAnonymous]
         [HttpPost("register")]
@@ -84,24 +85,35 @@ namespace Api.Controllers
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(LoginResponseModel))]
         public async Task<IActionResult> Login([FromBody] LoginRequestModel request)
         {
-            var ip = HttpContext.Connection.RemoteIpAddress.ToString();
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+
+            var blockCheck = await _ids.CheckLoginAttemptAsync(ip);
+            if (blockCheck.IsBlocked)
+            {
+                return StatusCode(429, new
+                {
+                    message = "Too many login attempts. Try again later.",
+                    remainingSeconds = blockCheck.RemainingSeconds
+                });
+            }
+
             var user = await _userManager.FindByEmailAsync(request.Email);
             if (user is null)
             {
-                var blocked = _ids.RecordAttempt(ip);
-                if (blocked) return StatusCode(429, "Too many login attempts. Try again later.");
-                return BadRequest(new BaseResponse("Incorrect email or password", false));
+                 await _ids.RegisterFailedAttemptAsync(ip);
+                return BadRequest(new BaseResponse("Invalid login credentials", false));
             }
 
             var isValidPassword = await _userManager.CheckPasswordAsync(user, $"{request.Password}{user.HashSalt}");
             if (!isValidPassword)
             {
-                var blocked = _ids.RecordAttempt(ip);
-                if (blocked) return StatusCode(429, "Too many login attempts. Try again later.");
-                return BadRequest(new BaseResponse("Incorrect email or password", false));
+                await _ids.RegisterFailedAttemptAsync(ip);
+                return BadRequest(new BaseResponse("Invalid login credentials", false));
             }
 
             if(!user.IsVerified) return BadRequest(new BaseResponse("Email not verified. Please verify your email before logging in.", false));
+
+            await _ids.ResetLoginAttemptsAsync(ip);
 
             var memberships = await _membershipService.GetUserOrganizationMembershipsAsync(user.Id);
 

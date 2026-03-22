@@ -4,6 +4,7 @@ using Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(BuildHedgeContext))]
-    partial class BuildHedgeContextModelSnapshot : ModelSnapshot
+    [Migration("20260316084417_FailedLoginAttemptsEntityAdded")]
+    partial class FailedLoginAttemptsEntityAdded
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -47,9 +50,6 @@ namespace Infrastructure.Migrations
                     b.Property<bool>("IsPaid")
                         .HasColumnType("bit");
 
-                    b.Property<DateTime>("IsPaidAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("LastUpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
@@ -77,8 +77,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("OrganizationId");
 
                     b.ToTable("BillingStatements");
                 });
@@ -605,37 +603,14 @@ namespace Infrastructure.Migrations
                     b.Property<Guid>("BillingStatementId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Currency")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("LastUpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("ProcessedAtUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<DateTime?>("UpdatedAtUtc")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Reference");
@@ -897,7 +872,7 @@ namespace Infrastructure.Migrations
                         {
                             UserId = new Guid("c8f2e5ab-9f34-4b97-8b7c-1a5e86c77e42"),
                             OrganizationId = new Guid("c8f2e6ab-9f34-4b97-8b7c-1a5e86d78e42"),
-                            CreatedAtUtc = new DateTime(2026, 3, 21, 15, 59, 40, 150, DateTimeKind.Utc).AddTicks(278),
+                            CreatedAtUtc = new DateTime(2026, 3, 16, 8, 44, 15, 519, DateTimeKind.Utc).AddTicks(9487),
                             CreatedBy = "Hedge_System",
                             Id = new Guid("7ad9b1e1-4c23-46a2-b8e4-219ab417f71f"),
                             IsDeleted = false,
@@ -945,17 +920,6 @@ namespace Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("UserRoles");
-                });
-
-            modelBuilder.Entity("Domain.Entities.BillingStatement", b =>
-                {
-                    b.HasOne("Domain.Entities.Organization", "Organization")
-                        .WithMany()
-                        .HasForeignKey("OrganizationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Organization");
                 });
 
             modelBuilder.Entity("Domain.Entities.HedgeContract", b =>

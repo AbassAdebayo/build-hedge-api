@@ -10,7 +10,7 @@ using Infrastructure.HedgeBackgroundWorker;
 using Infrastructure.IDS;
 using Infrastructure.IOC.Extensions;
 using Infrastructure.Jobs;
-using Infrastructure.Services;
+using Infrastructure.Services.Billing;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -45,7 +45,6 @@ builder.Services.Configure<EmailConfiguration>(builder.Configuration.GetSection(
 builder.Services.AddHostedService<HedgeLifecycleWorker>();
 
 builder.Services.AddScoped<BillingService>();
-builder.Services.AddScoped<LoginIntrusionDetector>();
 
 // Billing Job Setup
 // Runs 1AM on the 1st of every month
@@ -218,6 +217,23 @@ builder.Services.AddSwaggerGen(c =>
     {
         {
             new OpenApiSecuritySchemeReference("Bearer", document),
+            new List<string>()
+        }
+    });
+
+    c.AddSecurityDefinition("PaystackSignature", new OpenApiSecurityScheme
+    {
+        Description = "Enter your HMAC SHA512 hash here",
+        Name = "x-paystack-signature",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "ApiKeyScheme"
+    });
+
+    c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecuritySchemeReference("PaystackSignature", document),
             new List<string>()
         }
     });
