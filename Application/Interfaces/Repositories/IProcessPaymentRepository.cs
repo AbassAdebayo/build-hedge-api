@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Application.Interfaces.Repositories
 {
-    public interface IBillingRepository : IBaseRepository
+    public interface IProcessPaymentRepository : IBaseRepository
     {
     }
 }

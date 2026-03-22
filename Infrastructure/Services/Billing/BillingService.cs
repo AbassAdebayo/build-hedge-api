@@ -10,7 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Infrastructure.Services
+namespace Infrastructure.Services.Billing
 {
     public class BillingService
     {
@@ -28,7 +28,7 @@ namespace Infrastructure.Services
             using var scope = _serviceProvider.CreateScope();
             var orgRepo = scope.ServiceProvider.GetRequiredService<IOrganizationRepository>();
             var hedgeRepo = scope.ServiceProvider.GetRequiredService<IHedgeContractRepository>();
-            var billingRepo = scope.ServiceProvider.GetRequiredService<IBillingRepository>();
+            var billingRepo = scope.ServiceProvider.GetRequiredService<IBillingStatementRepository>();
             var globalConfig = scope.ServiceProvider.GetRequiredService<IGlobalConfigurationService>();
             var pdfService = scope.ServiceProvider.GetRequiredService<IPdfService>();
             var emailService = scope.ServiceProvider.GetRequiredService<IMailService>();
@@ -117,7 +117,7 @@ namespace Infrastructure.Services
         public async Task SendPaymentReminders()
         {
             using var scope = _serviceProvider.CreateScope();
-            var billingRepo = scope.ServiceProvider.GetRequiredService<IBillingRepository>();
+            var billingRepo = scope.ServiceProvider.GetRequiredService<IBillingStatementRepository>();
             var emailService = scope.ServiceProvider.GetRequiredService<IMailService>();
             var orgRepo = scope.ServiceProvider.GetRequiredService<IOrganizationRepository>();
             var hedgeRepo = scope.ServiceProvider.GetRequiredService<IHedgeContractRepository>();

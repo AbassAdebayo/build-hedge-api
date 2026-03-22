@@ -88,6 +88,12 @@ namespace Infrastructure.Context
             modelBuilder.Entity<Material>()
                 .HasQueryFilter(m => m.OrganizationId == _tenantId);
 
+            modelBuilder.Entity<BillingStatement>()
+                .HasQueryFilter(b => b.OrganizationId == _tenantId);
+
+            modelBuilder.Entity<ProcessedPayment>()
+                .HasQueryFilter(p => p.OrganizationId == _tenantId);
+
             // Map Material Metadata to JSONB for AI flexibility
             modelBuilder.Entity<Material>()
                 .Property(m => m.MetadataJson)
@@ -105,6 +111,10 @@ namespace Infrastructure.Context
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)
                 .IsUnique();
+
+
+            modelBuilder.Entity<ProcessedPayment>()
+                .HasKey(p => p.Reference);
 
            
         }
@@ -269,5 +279,7 @@ namespace Infrastructure.Context
         DbSet<Currency> Currencies => Set<Currency>();
         DbSet<GlobalSettings> GlobalSettings => Set<GlobalSettings>();
         DbSet<BillingStatement> BillingStatements => Set<BillingStatement>();
+        DbSet<ProcessedPayment> ProcessedPayments => Set<ProcessedPayment>();
+        DbSet<FailedLoginAttempts> FailedLoginAttempts => Set<FailedLoginAttempts>();
     }
 }
