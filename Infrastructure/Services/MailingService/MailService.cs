@@ -110,6 +110,7 @@ namespace Infrastructure.Services.MailingService
                     DueDate = statement.DueDate,
                     BaseCurrency = org.BaseCurrencyCode,
                     IsReminder = isReminder,
+                    IsPaid = statement.IsPaid,
                     PortalLink = "https://app.buildhedge.com/billing"
                 };
 

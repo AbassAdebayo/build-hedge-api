@@ -12,6 +12,7 @@ namespace Infrastructure.Messaging.Models
         public string BaseCurrency { get; set; }
         public string PortalLink { get; set; } = string.Empty;
 
-        public bool IsReminder { get; set; } = false;
+        public bool IsReminder { get; set; }
+        public bool IsPaid { get; set; }
     }
 }
