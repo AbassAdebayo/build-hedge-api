@@ -3,6 +3,8 @@ using Application.DTOs.Auth;
 using Application.DTOs.Payment;
 using Application.Interfaces.Payment;
 using Application.Interfaces.Repositories;
+using Domain.Contracts.MailingServices;
+using Domain.Contracts.PdfHandler;
 using Domain.Contracts.Tenant;
 using Domain.Entities;
 using Infrastructure.Repositories;
@@ -24,7 +26,8 @@ namespace Infrastructure.Services.Payment
         IUserOrganizationMembershipRepository membership, IUserRepository userRepository,
         ITenantProvider tenantProvider, IBillingStatementRepository billingStatementRepository,
         IProcessPaymentRepository processPaymentRepository, IUnitOfWork unitOfWork,
-        IOrganizationRepository organizationRepository) : IPaystackService
+        IOrganizationRepository organizationRepository, IHedgeContractRepository hedgeContract,
+        IPdfService pdfService, IMailService mailService) : IPaystackService
     {
         private readonly IConfiguration _config = config ?? throw new ArgumentNullException(nameof(config));
         private readonly ILogger<PaystackService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -34,6 +37,9 @@ namespace Infrastructure.Services.Payment
         private readonly IProcessPaymentRepository _processPaymentRepository = processPaymentRepository ?? throw new ArgumentNullException(nameof(processPaymentRepository));
         private readonly IUnitOfWork _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         private readonly IOrganizationRepository _organizationRepository = organizationRepository ?? throw new ArgumentNullException(nameof(organizationRepository));
+        private readonly IHedgeContractRepository _hedgeContract = hedgeContract ?? throw new ArgumentNullException(nameof(hedgeContract));
+        private readonly IMailService _mailService = mailService ?? throw new ArgumentNullException(nameof(mailService));
+        private readonly IPdfService _pdfService = pdfService ?? throw new ArgumentNullException(nameof(pdfService));
         private readonly Guid tenantId = tenantProvider.GetTenantId();
         public async Task<BaseResponse<string>> InitializeTransactionAsync(Guid billingStatementId)
         {
@@ -95,11 +101,9 @@ namespace Infrastructure.Services.Payment
 
                     var org = invoice.Organization;
 
-                    // Update States
                     invoice.IsPaid = true;
                     invoice.IsPaidAt = DateTime.UtcNow;
 
-                    // Transition from Trial to Paid
                     if (org.IsInTrial) org.IsInTrial = false;
 
                     // Set Expiry (Standard 30-day)
@@ -121,6 +125,8 @@ namespace Infrastructure.Services.Payment
 
                     await _unitOfWork.SaveChangesAsync();
                     await transaction.CommitAsync();
+
+                    await SendPaymentSuccessNotification(org, invoice);
 
                     _logger.LogInformation($"Paystack webhook process for reference {reference} successful");
                     return new BaseResponse<bool>($"Paystack webhook process for reference {reference} successful", true, true);
@@ -152,6 +158,31 @@ namespace Infrastructure.Services.Payment
             Console.WriteLine($"RECEIVED HASH: {headerSignature}");
 
             return result == headerSignature;
+        }
+
+        private async Task SendPaymentSuccessNotification(Organization org, BillingStatement statement)
+        {
+            var hedges = statement.HedgesIncluded.ToList();
+
+            foreach (var hedge in statement.HedgesIncluded)
+            {
+                // hedge.Material is now populated!
+                var materialName = hedge.Material.Name;
+                var quantity = hedge.Quantity;
+                _logger.LogInformation("Processing {Material} for Invoice {Inv}", materialName, statement.InvoiceNumber);
+            }
+
+            var pdfBytes = await _pdfService.GenerateInvoicePdf(org, statement, hedges);
+
+            // 3. Send the Email
+            await _mailService.SendInvoiceMail(
+                org.BillingEmail,
+                org,
+                statement,
+                pdfBytes
+            );
+
+
         }
     }
 }

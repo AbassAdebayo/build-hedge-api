@@ -1,7 +1,11 @@
 ﻿@model Infrastructure.Messaging.Models.SendInvoiceNotification
 @{
     Layout = null;
-    var title = Model.IsReminder ? "Payment Reminder" : "New Invoice Generated";
+    // Logical flags for better readability
+    bool isSuccess = !Model.IsReminder && Model.IsPaid;
+
+    var title = Model.IsReminder ? "Payment Reminder" : (isSuccess ? "Payment Receipt" : "New Invoice Generated");
+    var headerGradient = isSuccess ? "linear-gradient(135deg,#065f46,#10b981)" : "linear-gradient(135deg,#0f172a,#1d4ed8)";
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -11,7 +15,7 @@
             <td align="center">
                 <table role="presentation" width="600" style="background:#ffffff; border-radius:16px; overflow:hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
                     <tr>
-                        <td style="padding:28px; background:linear-gradient(135deg,#0f172a,#1d4ed8); text-align:center;">
+                        <td style="padding:28px; background:@headerGradient; text-align:center;">
                             <img src="cid:build_hedge_logo.png" style="width:180px; margin-bottom:10px;" />
                             <div style="font-size:22px; font-weight:700; color:#ffffff; letter-spacing:1px;">@title</div>
                         </td>
@@ -22,9 +26,18 @@
                             <p style="font-size:16px;">Hi <strong>@Model.Name</strong>,</p>
 
                             <p style="color:#4b5563; line-height:1.6;">
-                                @(Model.IsReminder
-                                ? "This is a friendly reminder that your BuildHedge statement is currently outstanding. Please find the details below."
-                                : "Your monthly BuildHedge statement has been generated. We have attached a full PDF breakdown of your material hedges and premiums for your records.")
+                                @if (Model.IsReminder)
+                                {
+                                    <text>This is a friendly reminder that your BuildHedge statement is currently outstanding. Please find the details below.</text>
+                                }
+                                else if (isSuccess)
+                                {
+                                    <text>Thank you for your payment! Your BuildHedge statement has been successfully settled. We have attached the official receipt and PDF breakdown for your records.</text>
+                                }
+                                else
+                                {
+                                    <text>Your monthly BuildHedge statement has been generated. We have attached a full PDF breakdown of your material hedges and premiums for your records.</text>
+                                }
                             </p>
 
                             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:20px; margin:24px 0;">
@@ -34,26 +47,53 @@
                                         <td align="right" style="font-weight:600; padding-bottom:8px;">@Model.InvoiceNumber</td>
                                     </tr>
                                     <tr>
-                                        <td style="color:#64748b; font-size:13px; padding-bottom:8px;">Total Amount Due</td>
-                                        <td align="right" style="font-weight:700; font-size:18px; color:#1e40af; padding-bottom:8px;">@Model.AmountDue.ToString("N2") @Model.BaseCurrency</td>
+                                        <td style="color:#64748b; font-size:13px; padding-bottom:8px;">@(isSuccess ? "Amount Paid" : "Total Amount Due")</td>
+                                        <td align="right" style="font-weight:700; font-size:18px; color:@(isSuccess ? "#065f46" : "#1e40af"); padding-bottom:8px;">
+                                            @Model.AmountDue.ToString("N2") @Model.BaseCurrency
+                                        </td>
                                     </tr>
                                     <tr>
-                                        <td style="color:#64748b; font-size:13px;">Due Date</td>
-                                        <td align="right" style="font-weight:600; color:#b91c1c;">@Model.DueDate.ToString("dd MMM yyyy")</td>
+                                        <td style="color:#64748b; font-size:13px;">@(isSuccess ? "Payment Date" : "Due Date")</td>
+                                        <td align="right" style="font-weight:600; color:@(isSuccess ? "#64748b" : "#b91c1c");">
+                                            @(isSuccess? DateTime.Now.ToString("dd MMM yyyy") : Model.DueDate.ToString("dd MMM yyyy"))
+                                        </td>
                                     </tr>
+                                    @if (isSuccess)
+                                    {
+                                        <tr>
+                                            <td style="color:#64748b; font-size:13px; padding-top:8px;">Status</td>
+                                            <td align="right" style="font-weight:700; color:#059669; padding-top:8px;">PAID</td>
+                                        </tr>
+                                    }
                                 </table>
                             </div>
 
-                            <table role="presentation" width="100%" style="margin-top:28px;">
-                                <tr>
-                                    <td align="center">
-                                        <a href="@Model.PortalLink"
-                                           style="background:#2563eb; color:#ffffff; padding:16px 32px; border-radius:12px; font-weight:700; text-decoration:none; display:inline-block;">
-                                            Secure Payment Portal
-                                        </a>
-                                    </td>
-                                </tr>
-                            </table>
+                            @if (!isSuccess)
+                            {
+                                <table role="presentation" width="100%" style="margin-top:28px;">
+                                    <tr>
+                                        <td align="center">
+                                            <a href="@Model.PortalLink"
+                                               style="background:#2563eb; color:#ffffff; padding:16px 32px; border-radius:12px; font-weight:700; text-decoration:none; display:inline-block;">
+                                                Secure Payment Portal
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </table>
+                            }
+                            else
+                            {
+                                <table role="presentation" width="100%" style="margin-top:28px;">
+                                    <tr>
+                                        <td align="center">
+                                            <a href="@Model.PortalLink"
+                                               style="background:#f1f5f9; color:#475569; padding:12px 24px; border-radius:12px; font-weight:600; text-decoration:none; display:inline-block; border: 1px solid #cbd5e1;">
+                                                View Payment History
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </table>
+                            }
 
                             <p style="color:#94a3b8; font-size:12px; text-align:center; margin-top:30px; line-height:1.5;">
                                 Note: A detailed itemization of all 2% premiums and overage fees is included in the attached PDF.

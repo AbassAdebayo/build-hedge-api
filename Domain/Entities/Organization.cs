@@ -9,6 +9,7 @@ namespace Domain.Entities
     public class Organization : BaseEntity
     {
         public required string BusinessName { get; set; }
+        public string? BillingEmail { get; set; }
         public string? TaxId { get; set; }
         public SubscriptionPlan SubscriptionPlan { get; set; }
         public string BaseCurrencyCode { get; set; } = null!;

@@ -16,6 +16,8 @@ namespace Infrastructure.Repositories
             var invoice = await _context.Set<BillingStatement>()
                 .IgnoreQueryFilters()
                 .Include(b => b.Organization)
+                .Include(b => b.HedgesIncluded)
+                .ThenInclude(h => h.Material)
                 .FirstOrDefaultAsync(b => b.Id == id);
 
             return invoice;

@@ -59,6 +59,7 @@ namespace Application.Implementation
                 {
                     var newOrganization = new Organization
                     {
+                        BillingEmail = existingUserAdmin.Email,
                         BusinessName = request.BusinessName,
                         SubscriptionPlan = ParseSubscriptionPlan(request.SubscriptionPlan),
                         TaxId = request.TaxId,
@@ -172,6 +173,7 @@ namespace Application.Implementation
                     var organization = new Organization
                     {
                         BusinessName = request.BusinessName,
+                        BillingEmail = adminUser.Email,
                         SubscriptionPlan = ParseSubscriptionPlan(request.SubscriptionPlan),
                         TaxId = request.TaxId,
                         BaseCurrencyCode = currency.Code,
