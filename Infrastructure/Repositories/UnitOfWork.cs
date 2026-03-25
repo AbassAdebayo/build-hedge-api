@@ -1,8 +1,10 @@
 ﻿using Application.Interfaces.Repositories;
 using Infrastructure.Context;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Text;
 
 namespace Infrastructure.Repositories
@@ -13,7 +15,7 @@ namespace Infrastructure.Repositories
 
         public async Task<IDbContextTransaction> BeginTransactionAsync()
         {
-            return await _context.Database.BeginTransactionAsync();
+            return await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
         }
 
         public IExecutionStrategy CreateExecutionStrategy()
