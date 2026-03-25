@@ -9,6 +9,7 @@ using Domain.Contracts.Tenant;
 using Domain.Entities;
 using Infrastructure.Repositories;
 using Infrastructure.Tenant;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -19,6 +20,8 @@ using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
+using System.Transactions;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxTokenParser;
 
 namespace Infrastructure.Services.Payment
 {
@@ -79,66 +82,123 @@ namespace Infrastructure.Services.Payment
         public async Task<BaseResponse<bool>> ProcessWebhookAsync(PaystackEvent ev)
         {
             var reference = ev.Data.Reference;
-            var paymentReferenceExists = await _processPaymentRepository.Any<ProcessedPayment>(p => p.Reference == reference);
-            if (paymentReferenceExists)
+            var isDuplicate = await _processPaymentRepository.Any<ProcessedPayment>(p => p.Reference == reference);
+            if (isDuplicate)
             {
                 _logger.LogInformation($"Duplicate webhook received for reference: {reference}");
                 return new BaseResponse<bool>($"Duplicate webhook received for reference: {reference}", true, true);
             }
 
-            // Using the execution strategy to handle potential transient failures during the transaction
+            Organization orgToNotify = null;
+            BillingStatement invoiceToNotify = null;
+            BaseResponse<bool> finalResponse = null;
+
             var strategy = _unitOfWork.CreateExecutionStrategy();
             BaseResponse<bool> response = await strategy.ExecuteAsync(async () =>
             {
-                using var transaction = await _unitOfWork.BeginTransactionAsync();
-                try
+                using (var transaction = await _unitOfWork.BeginTransactionAsync())
                 {
-                    var invoiceId = Guid.Parse(ev.Data.Metadata.InvoiceId);
-
-                    var invoice = await _billingStatementRepository.GetBillingStatementWithOrganization(invoiceId);
-
-                    if (invoice is null) return new BaseResponse<bool>($"Invoice {invoiceId} not found.", false, false);
-
-                    var org = invoice.Organization;
-
-                    invoice.IsPaid = true;
-                    invoice.IsPaidAt = DateTime.UtcNow;
-
-                    if (org.IsInTrial) org.IsInTrial = false;
-
-                    // Set Expiry (Standard 30-day)
-                    org.SubscriptionExpiryDate = DateTime.UtcNow.AddDays(30);
-                    org.IsActive = true;
-
-                    //await _organizationRepository.Update<Organization>(org);
-
-                    var processPayment = new ProcessedPayment
+                    try
                     {
-                        Currency = ev.Data.Currency,
-                        Reference = reference,
-                        OrganizationId = org.Id,
-                        BillingStatementId = invoice.Id,
-                        AmountPaid = ev.Data.Amount / 100m
-                    };
+                        var invoiceId = Guid.Parse(ev.Data.Metadata.InvoiceId);
 
-                    await _processPaymentRepository.Add<ProcessedPayment>(processPayment);
+                        var invoice = await _billingStatementRepository.GetBillingStatementWithOrganization(invoiceId);
 
-                    await _unitOfWork.SaveChangesAsync();
-                    await transaction.CommitAsync();
+                        if (invoice is null) finalResponse =  new BaseResponse<bool>($"Invoice {invoiceId} not found.", false, false);
 
-                    await SendPaymentSuccessNotification(org, invoice);
+                        if (ev.Data.Amount != (int)(invoice.TotalAmountDue * 100))
+                        {
+                            _logger.LogCritical("FRAUD ALERT: Amount mismatch for Invoice {Id}", invoice.Id);
+                            finalResponse =  new BaseResponse<bool>("Amount mismatch", false, false);
+                        }
 
-                    _logger.LogInformation($"Paystack webhook process for reference {reference} successful");
-                    return new BaseResponse<bool>($"Paystack webhook process for reference {reference} successful", true, true);
+                        var org = invoice.Organization;
 
+                        invoice.IsPaid = true;
+                        invoice.IsPaidAt = DateTime.UtcNow;
+
+                        if (org.IsInTrial) org.IsInTrial = false;
+
+                        // Set Expiry (Standard 30-day)
+                        org.SubscriptionExpiryDate = DateTime.UtcNow.AddDays(30);
+                        org.IsActive = true;
+
+                        var processPayment = new ProcessedPayment
+                        {
+                            Currency = ev.Data.Currency,
+                            Reference = reference,
+                            OrganizationId = org.Id,
+                            BillingStatementId = invoice.Id,
+                            AmountPaid = ev.Data.Amount / 100m
+                        };
+
+                        await _processPaymentRepository.Add<ProcessedPayment>(processPayment);
+
+                        await _unitOfWork.SaveChangesAsync();
+                        await transaction.CommitAsync();
+
+                        orgToNotify = org;
+                        invoiceToNotify = invoice;
+
+                        _logger.LogInformation($"Paystack webhook process for reference {reference} successful");
+                        finalResponse =  new BaseResponse<bool>($"Paystack webhook process for reference {reference} successful", true, true);
+
+                    }
+                    catch (DbUpdateConcurrencyException ex)
+                    {
+                        _logger.LogWarning("Concurrency conflict for Invoice {Id}. Checking if already settled.", invoiceToNotify.Id);
+
+                        var entry = ex.Entries.Single(e => e.Entity is BillingStatement);
+                        await entry.ReloadAsync();
+
+                        var currentInvoice = (BillingStatement)entry.Entity;
+
+                        if (currentInvoice.IsPaid)
+                        {
+                            _logger.LogInformation("Conflict resolved: Invoice {Id} was already marked as Paid by another process.", currentInvoice.Id);
+                            finalResponse =  new BaseResponse<bool>("Success (Already Paid)", true, true);
+                        }
+
+                        throw;
+                    }
+                    catch (DbUpdateException ex) when (ex.InnerException is SqlException sqlEx)
+                    {
+                        if (sqlEx.Number == 1205)
+                        {
+                            _logger.LogWarning("Deadlock detected for Ref {Ref}. Strategy will retry.", reference);
+                            throw;
+                        }
+
+                        if (sqlEx.Number == 2627 || sqlEx.Number == 2601)
+                        {
+                            _logger.LogInformation("Duplicate Reference {Ref} detected. Skipping safely.", reference);
+                            finalResponse =  new BaseResponse<bool>("Already Processed", true, true);
+                        }
+
+                        await transaction.RollbackAsync();
+                        throw;
+                    }
+                    catch (Exception ex)
+                    {
+                        await transaction.RollbackAsync();
+                        _logger.LogCritical(ex, "FATAL: Payment processing failed for Ref {Ref}", ev.Data.Reference);
+                        finalResponse =  new BaseResponse<bool>($"Failed to process Paystack webhook for reference {reference}", false, false);
+                    }
                 }
-                catch (Exception ex)
+
+                if (finalResponse != null && finalResponse.Status && orgToNotify != null)
                 {
-                    await transaction.RollbackAsync();
-                    _logger.LogError(ex, $"Failed to process Paystack webhook for reference {reference}");
-                    return new BaseResponse<bool>($"Failed to process Paystack webhook for reference {reference}", false, false);
+                    try
+                    {
+                        await SendPaymentSuccessNotification(orgToNotify, invoiceToNotify);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Payment saved but notification failed for Ref {Ref}", reference);
+                    }
                 }
 
+                return finalResponse ?? new BaseResponse<bool>("Unexpected error", false, false);
             });
             return response;
         }

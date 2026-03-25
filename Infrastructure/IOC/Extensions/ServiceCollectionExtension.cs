@@ -92,7 +92,13 @@ namespace Infrastructure.IOC.Extensions
         public static IServiceCollection AddDatabase(this IServiceCollection services, string connectionString)
         {
             services.AddDbContext<BuildHedgeContext>(options =>
-                options.UseSqlServer(connectionString));
+                options.UseSqlServer(connectionString, sqlOptions =>
+                {
+                    sqlOptions.EnableRetryOnFailure(
+                        maxRetryCount: 5,
+                        maxRetryDelay: TimeSpan.FromSeconds(30),
+                        errorNumbersToAdd: null);         
+                }));
             return services;
         }
     }

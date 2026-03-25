@@ -56,6 +56,8 @@ namespace Infrastructure.Context
                 entity.Property(e => e.ExchangeRateAtLock).HasPrecision(18, 4);
                 entity.Property(e => e.TotalValueBaseCurrency).HasPrecision(18, 4);
                 entity.Property(e => e.OverageFee).HasPrecision(18, 4);
+
+                entity.HasQueryFilter(e => e.OrganizationId == _tenantId);
             });
 
             modelBuilder.Entity<BillingStatement>(entity =>
@@ -64,6 +66,10 @@ namespace Infrastructure.Context
                 entity.Property(b => b.TotalOverageFees).HasPrecision(18, 4);
                 entity.Property(b => b.TotalPremiumFees).HasPrecision(18, 4);
                 entity.Property(b => b.SubscriptionBaseFee).HasPrecision(18, 4);
+                entity.Property(b => b.RowVersion).IsRowVersion();
+
+                entity.HasQueryFilter(b => b.OrganizationId == _tenantId);
+
             });
 
             modelBuilder.Entity<MaterialPriceHistory>()
@@ -77,19 +83,17 @@ namespace Infrastructure.Context
                 .WithMany(o => o.Projects)
                 .HasForeignKey(p => p.OrganizationId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasQueryFilter(p => p.OrganizationId == _tenantId);
+
+
             });
-
-            modelBuilder.Entity<Project>()
-                .HasQueryFilter(p => p.OrganizationId == _tenantId);
-
-            modelBuilder.Entity<HedgeContract>()
-                .HasQueryFilter(h => h.OrganizationId == _tenantId);
+                
 
             modelBuilder.Entity<Material>()
                 .HasQueryFilter(m => m.OrganizationId == _tenantId);
 
-            modelBuilder.Entity<BillingStatement>()
-                .HasQueryFilter(b => b.OrganizationId == _tenantId);
+           
 
             modelBuilder.Entity<ProcessedPayment>()
                 .HasQueryFilter(p => p.OrganizationId == _tenantId);
@@ -113,9 +117,13 @@ namespace Infrastructure.Context
                 .IsUnique();
 
 
-            modelBuilder.Entity<ProcessedPayment>()
-                .HasKey(p => p.Reference);
+            modelBuilder.Entity<ProcessedPayment>(entity =>
+            {
+                entity.HasKey(p => p.Reference);
 
+                entity.HasIndex(p => p.Reference)
+                .IsUnique();
+            });
            
         }
 
