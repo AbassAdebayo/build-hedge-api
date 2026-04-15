@@ -16,7 +16,7 @@ namespace Api.Controllers
         [HttpGet("all")]
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(BaseResponse))]
         [ProducesResponseType((int)HttpStatusCode.Unauthorized, Type = typeof(BaseResponse))]
-        public async Task<IActionResult> GetAllRoles()
+        public  Task<IActionResult> GetAllRoles()
         {
             var response = await _roleService.GetAllRolesAsync();
             return response.Status ? Ok(response) : BadRequest(response);
